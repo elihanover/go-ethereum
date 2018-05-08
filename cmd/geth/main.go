@@ -118,6 +118,7 @@ var (
 		utils.GpoBlocksFlag,
 		utils.GpoPercentileFlag,
 		utils.ExtraDataFlag,
+		utils.DepositFlag,
 		configFileFlag,
 	}
 
@@ -166,6 +167,9 @@ func init() {
 		consoleCommand,
 		attachCommand,
 		javascriptCommand,
+		// See shardingcmd.go:
+		notaryClientCommand,
+		proposerClientCommand,
 		// See misccmd.go:
 		makecacheCommand,
 		makedagCommand,

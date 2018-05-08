@@ -532,6 +532,12 @@ var (
 		Usage: "Minimum POW accepted",
 		Value: whisper.DefaultMinimumPoW,
 	}
+
+	//Sharding Settings
+	DepositFlag = cli.BoolFlag{
+		Name:  "deposit",
+		Usage: "To become a notary with your sharding client, 100 ETH will be deposited from user's account into SMC ",
+	}
 )
 
 // MakeDataDir retrieves the currently requested data directory, terminating
