@@ -34,6 +34,7 @@ package trie
 // in the case of an odd number. All remaining nibbles (now an even number) fit properly
 // into the remaining bytes. Compact encoding is used for nodes stored on disk.
 
+// Original
 func hexToCompact(hex []byte) []byte {
 	terminator := byte(0)
 	if hasTerm(hex) { // IF THIS IS A LEAF
@@ -51,6 +52,25 @@ func hexToCompact(hex []byte) []byte {
 	return buf
 }
 
+// Modified
+func binToCompact(bin []byte) []byte {
+	terminator := byte(0)
+	if hasTerm(bin) { // IF THIS IS A LEAF, has terminator
+		terminator = 1
+		bin = bin[:len(bin)-1]
+	}
+	buf := make([]byte, len(bin)/8+1)
+	buf[0] = terminator << 5 // the flag byte
+	if len(bin)&1 == 1 {
+		buf[0] |= 1 << 4 // odd flag
+		buf[0] |= bin[0] // first nibble is contained in the first byte
+		bin = bin[1:]
+	}
+	decodeBits(bin, buf[1:])
+	return buf
+}
+
+// original
 func compactToHex(compact []byte) []byte {
 	base := keybytesToHex(compact)
 	base = base[:len(base)-1]
@@ -63,19 +83,20 @@ func compactToHex(compact []byte) []byte {
 	return base[chop:]
 }
 
-// original
-// func keybytesToHex(str []byte) []byte {
-// 	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
-// 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
-// 	for i, b := range str {
-// 		nibbles[i*2] = b / 16
-// 		nibbles[i*2+1] = b % 16
-// 	}
-// 	nibbles[l-1] = 16
-// 	return nibbles
-// }
-
 // modified
+func compactToBin(compact []byte) []byte {
+	base := keybytesToBin(compact)
+	base = base[:len(base)-1] // ?
+	// apply terminator flag
+	if base[0] >= 2 {
+		base = append(base, 16)
+	}
+	// apply odd flag
+	chop := 2 - base[0]&1
+	return base[chop:]
+}
+
+// original
 func keybytesToHex(str []byte) []byte {
 	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
@@ -84,7 +105,19 @@ func keybytesToHex(str []byte) []byte {
 		nibbles[i*2+1] = b % 16
 	}
 	nibbles[l-1] = 16
+	return nibbles
+}
 
+// modified
+// change to keybytesToBin later
+func keybytesToBin(str []byte) []byte {
+	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
+	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
+	for i, b := range str {
+		nibbles[i*2] = b / 16 // set from high nibble
+		nibbles[i*2+1] = b % 16 // set from low nibble
+	}
+	nibbles[l-1] = 16 // set terminator bit
 
 	var bits = make([]byte, (l-1)*4) // 4 bits per nibble
 	for i, n := range nibbles {
@@ -95,19 +128,11 @@ func keybytesToHex(str []byte) []byte {
 		}
 	}
 
+
 	return bits
 }
 
-// WILL BYTES BE BIN OR HEX?
-// func keybytesToBin(str []byte) []byte {
-// 	l := len(str)*8 + 1
-// 	var bits = make([]byte, l)
-// 	for i, b := range str {
-// 		bits[i]
-// 	}
-//
-// }
-
+//ORIGINAL
 // hexToKeybytes turns hex nibbles into key bytes.
 // This can only be used for keys of even length.
 func hexToKeybytes(hex []byte) []byte {
@@ -121,6 +146,31 @@ func hexToKeybytes(hex []byte) []byte {
 	decodeNibbles(hex, key)
 	return key
 }
+
+// MODIFIED
+// hexToKeybytes turns hex nibbles into key bytes.
+// This can only be used for keys of even length.
+func binToKeybytes(bin []byte) []byte {
+	if hasTerm(bin) { // does this have terminator flag?
+		bin = bin[:len(bin)-1] // if so, drop it
+	}
+	if len(bin)&1 != 0 {
+		panic("can't convert bin key of odd length")
+	}
+	key := make([]byte, (len(bin)+1)/2)
+	decodeBits(bin, key)
+	return key
+}
+
+// decode bits into one sequence
+func decodeBits(bits []byte, bytes []byte) {
+	for by := 0; by < len(bytes); by++ {
+		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
+			bytes[by] |= bits[bt]
+		}
+	}
+}
+
 
 func decodeNibbles(nibbles []byte, bytes []byte) {
 	for bi, ni := 0, 0; ni < len(nibbles); bi, ni = bi+1, ni+2 {
@@ -142,8 +192,6 @@ func prefixLen(a, b []byte) int {
 	return i
 }
 
-// ADDED
-// REFACTOR FOR READABILITY
 // returns the length of the common prefix of a and b in terms of BITS
 func prefixBitLen(a, b []byte) int {
 	var lenA = len(a)*8

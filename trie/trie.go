@@ -131,7 +131,7 @@ func (t *Trie) Get(key []byte) []byte {
 // The value bytes must not be modified by the caller.
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryGet(key []byte) ([]byte, error) {
-	key = keybytesToHex(key)
+	key = keybytesToBin(key)
 	value, newroot, didResolve, err := t.tryGet(t.root, key, 0)
 	if err == nil && didResolve {
 		t.root = newroot
@@ -205,7 +205,7 @@ func (t *Trie) Update(key, value []byte) {
 //
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryUpdate(key, value []byte) error {
-	k := keybytesToHex(key)
+	k := keybytesToBin(key)
 	if len(value) != 0 {
 		_, n, err := t.insert(t.root, nil, k, valueNode(value))
 		if err != nil {
@@ -222,39 +222,8 @@ func (t *Trie) TryUpdate(key, value []byte) error {
 	return nil
 }
 
-// BIT BY BIT INSERSION
-// func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
-// 	// end condition, path matched, now change add the node here
-// 	if len(key) == 0 { // reached end of path
-// 		if v, ok := n.(valueNode); ok {
-// 			// if ¿?
-//
-// 		}
-// 		// otherwise
-// 		return true, value, nil
-// 	}
-//
-// 	// check node type
-// 	switch n := n.(type) {
-// 	case *shortNode:
-// 		// get length of path match in bits
-// 		matchlen := prefixBitLen(key, n.Key) // (what is n.Key ??)
-//
-// 		// if paths match perfectly, we have a leaf node
-// 		// NEED TO CHANGE THIS CHECK TO COUNT BITS
-// 		if matchlen == len(n.Key) {
-// 			//
-// 			var pre =
-// 			var k =
-// 			dirty, nn, err := t.insert(
-// 		}
-// 	}
-// }
 
-
-// IF THIS JUST TAKES AN ARRAY OF BYTES THAT REPRESENT BITS, SHOULD WORK FINE
-// SO ENCODING IN THEORY WOULDN'T NEED TO CHANGE IF MESSAGES SEND INFO CORRECTLY
-//  WE JUST NEED TO CONVERT HEX PATH TO BIN VALUES
+// ORIGINAL
 func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
 	if len(key) == 0 {
 		if v, ok := n.(valueNode); ok {
@@ -328,6 +297,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 }
 
+
+
 // Delete removes any existing value for key from the trie.
 func (t *Trie) Delete(key []byte) {
 	if err := t.TryDelete(key); err != nil {
@@ -338,7 +309,7 @@ func (t *Trie) Delete(key []byte) {
 // TryDelete removes any existing value for key from the trie.
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryDelete(key []byte) error {
-	k := keybytesToHex(key)
+	k := keybytesToBin(key)
 	_, n, err := t.delete(t.root, nil, k)
 	if err != nil {
 		return err
@@ -347,7 +318,7 @@ func (t *Trie) TryDelete(key []byte) error {
 	return nil
 }
 
-// CHANGE TO DESCEND BIT BY BIT
+// ORIGINAL
 // delete returns the new root of the trie with key deleted.
 // It reduces the trie to minimal form by simplifying
 // nodes on the way up after deleting recursively.

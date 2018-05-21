@@ -139,7 +139,7 @@ func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 		return nil, err
 	}
 	flag := nodeFlag{hash: hash, gen: cachegen}
-	key := compactToHex(kbuf)
+	key := compactToBin(kbuf)
 	if hasTerm(key) {
 		// value node
 		val, _, err := rlp.SplitString(rest)
