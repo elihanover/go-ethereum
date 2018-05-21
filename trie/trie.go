@@ -138,6 +138,13 @@ func (t *Trie) TryGet(key []byte) ([]byte, error) {
 	}
 	return value, err
 }
+// LOOKS UP NODE BY PATH
+// INPUT WILL BE BINARY ENCODING, NOT HEX
+// MAYBE INSTEAD OF CHANING INPUT, WE
+  // CAN CHANGE keybytesToHex INTO KEYBYTESTOBIN
+	// THAT WAY, WE CAN TALK WITH OTHER HEX NODES?
+	// OR WE CAN DETECT IF PATH IS HEX OR BIN, AND THEN PROCESS ACCORDINGLY?
+
 
 func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode node, didResolve bool, err error) {
 	switch n := (origNode).(type) {
@@ -215,7 +222,38 @@ func (t *Trie) TryUpdate(key, value []byte) error {
 	return nil
 }
 
+// BIT BY BIT INSERSION
 func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
+	// end condition, path matched, now change add the node here
+	if len(key) == 0 { // reached end of path
+		if v, ok := n.(valueNode); ok {
+			// if ¿?
+
+		}
+		// otherwise
+		return true, value, nil
+	}
+
+	// check node type
+	switch n := n.(type) {
+	case *shortNode:
+		// get length of path match in bits
+		matchlen := prefixBitLen(key, n.Key) // (what is n.Key ??)
+
+		// if paths match perfectly, we have a leaf node
+		if matchlen == len(n.Key) {
+			var pre =
+			var k = 
+			dirty, nn, err := t.insert(
+		}
+	}
+}
+
+
+
+func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
+	// END CONDITION OF THE RECURSION
+	// SET THE VALUE HERE TO VALUE
 	if len(key) == 0 {
 		if v, ok := n.(valueNode); ok {
 			return !bytes.Equal(v, value.(valueNode)), value, nil
@@ -224,10 +262,10 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
-		matchlen := prefixLen(key, n.Key)
+		matchlen := prefixLen(key, n.Key) // MATCHLEN CHECKS IF KEY MATCHES AND WE HAVE A LEAF NODE: I.E. IF LEAF NODE
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
-		if matchlen == len(n.Key) {
+		if matchlen == len(n.Key) { // DON'T UNDERSTAND THIS CHECK
 			dirty, nn, err := t.insert(n.Val, append(prefix, key[:matchlen]...), key[matchlen:], value)
 			if !dirty || err != nil {
 				return false, n, err
@@ -235,6 +273,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.
+		// HERE WE NEED TO BRANCH OUT NOT BY NIBBLE BUT BY BIT
 		branch := &fullNode{flags: t.newFlag()}
 		var err error
 		_, branch.Children[n.Key[matchlen]], err = t.insert(nil, append(prefix, n.Key[:matchlen+1]...), n.Key[matchlen+1:], n.Val)
@@ -303,6 +342,7 @@ func (t *Trie) TryDelete(key []byte) error {
 	return nil
 }
 
+// CHANGE TO DESCEND BIT BY BIT
 // delete returns the new root of the trie with key deleted.
 // It reduces the trie to minimal form by simplifying
 // nodes on the way up after deleting recursively.

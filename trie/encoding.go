@@ -36,9 +36,9 @@ package trie
 
 func hexToCompact(hex []byte) []byte {
 	terminator := byte(0)
-	if hasTerm(hex) {
+	if hasTerm(hex) { // IF THIS IS A LEAF
 		terminator = 1
-		hex = hex[:len(hex)-1]
+		hex = hex[:len(hex)-1] // GET RID OF TERMINATOR, WHY DID WE NEED IT IN MEMORY?
 	}
 	buf := make([]byte, len(hex)/2+1)
 	buf[0] = terminator << 5 // the flag byte
@@ -63,15 +63,21 @@ func compactToHex(compact []byte) []byte {
 	return base[chop:]
 }
 
+// NEED A KEYBYTES TO BIN RIGHT?
 func keybytesToHex(str []byte) []byte {
-	l := len(str)*2 + 1
-	var nibbles = make([]byte, l)
+	l := len(str)*2 + 1 // EXTRA BYTE IS ?, AND WHY x2?
+	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
 	for i, b := range str {
 		nibbles[i*2] = b / 16
 		nibbles[i*2+1] = b % 16
 	}
 	nibbles[l-1] = 16
 	return nibbles
+}
+
+// WILL BYTES BE BIN OR HEX?
+func keybytesToBin(str []byte) []byte {
+
 }
 
 // hexToKeybytes turns hex nibbles into key bytes.
@@ -102,6 +108,26 @@ func prefixLen(a, b []byte) int {
 	}
 	for ; i < length; i++ {
 		if a[i] != b[i] {
+			break
+		}
+	}
+	return i
+}
+
+// ADDED
+// REFACTOR FOR READABILITY
+// returns the length of the common prefix of a and b in terms of BITS
+func prefixBitLen(a, b []byte) int {
+	var lenA = len(a)*8
+	var lenB = len(b)*8
+	var i, length = 0, lenA // 8 bits
+	if lebB < length {
+		length = lenB
+	}
+	for ; i < length; i++ {
+		// check bit by bit for difference
+		var byteIndex = i/8
+		if a[byteIndex] >> (7-i%8) != b[byteIndex] >> (7-i%8) { // if
 			break
 		}
 	}
