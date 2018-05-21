@@ -222,11 +222,35 @@ func (t *Trie) TryUpdate(key, value []byte) error {
 	return nil
 }
 
-// CHANGE THIS TO BRANCH BIT BY BIT
-// NEED TO ACCESS BIT BY BIT INSTEAD OF NIB BY NIB
-// AH OK SO RECURSIVELY INCREMENTS BYTE BY BYTE?
-// NEED TO CHANGE TO INCREMENT BIT BY BIT
-// BUT HOW DOES IT HANDLE NIBBLES AND NOT JUST BYTES?
+// BIT BY BIT INSERSION
+func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
+	// end condition, path matched, now change add the node here
+	if len(key) == 0 { // reached end of path
+		if v, ok := n.(valueNode); ok {
+			// if ¿?
+
+		}
+		// otherwise
+		return true, value, nil
+	}
+
+	// check node type
+	switch n := n.(type) {
+	case *shortNode:
+		// get length of path match in bits
+		matchlen := prefixBitLen(key, n.Key) // (what is n.Key ??)
+
+		// if paths match perfectly, we have a leaf node
+		if matchlen == len(n.Key) {
+			var pre =
+			var k = 
+			dirty, nn, err := t.insert(
+		}
+	}
+}
+
+
+
 func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
 	// END CONDITION OF THE RECURSION
 	// SET THE VALUE HERE TO VALUE
