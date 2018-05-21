@@ -65,7 +65,7 @@ type LeafCallback func(leaf []byte, parent common.Hash) error
 //
 // Trie is not safe for concurrent use.
 type Trie struct {
-	db           *Database
+	db           *Database // WHAT DB IS THIS PULLING FROM AT START?
 	root         node
 	originalRoot common.Hash
 
@@ -223,37 +223,39 @@ func (t *Trie) TryUpdate(key, value []byte) error {
 }
 
 // BIT BY BIT INSERSION
+// func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
+// 	// end condition, path matched, now change add the node here
+// 	if len(key) == 0 { // reached end of path
+// 		if v, ok := n.(valueNode); ok {
+// 			// if ¿?
+//
+// 		}
+// 		// otherwise
+// 		return true, value, nil
+// 	}
+//
+// 	// check node type
+// 	switch n := n.(type) {
+// 	case *shortNode:
+// 		// get length of path match in bits
+// 		matchlen := prefixBitLen(key, n.Key) // (what is n.Key ??)
+//
+// 		// if paths match perfectly, we have a leaf node
+// 		// NEED TO CHANGE THIS CHECK TO COUNT BITS
+// 		if matchlen == len(n.Key) {
+// 			//
+// 			var pre =
+// 			var k =
+// 			dirty, nn, err := t.insert(
+// 		}
+// 	}
+// }
+
+
+// IF THIS JUST TAKES AN ARRAY OF BYTES THAT REPRESENT BITS, SHOULD WORK FINE
+// SO ENCODING IN THEORY WOULDN'T NEED TO CHANGE IF MESSAGES SEND INFO CORRECTLY
+//  WE JUST NEED TO CONVERT HEX PATH TO BIN VALUES
 func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
-	// end condition, path matched, now change add the node here
-	if len(key) == 0 { // reached end of path
-		if v, ok := n.(valueNode); ok {
-			// if ¿?
-
-		}
-		// otherwise
-		return true, value, nil
-	}
-
-	// check node type
-	switch n := n.(type) {
-	case *shortNode:
-		// get length of path match in bits
-		matchlen := prefixBitLen(key, n.Key) // (what is n.Key ??)
-
-		// if paths match perfectly, we have a leaf node
-		if matchlen == len(n.Key) {
-			var pre =
-			var k = 
-			dirty, nn, err := t.insert(
-		}
-	}
-}
-
-
-
-func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
-	// END CONDITION OF THE RECURSION
-	// SET THE VALUE HERE TO VALUE
 	if len(key) == 0 {
 		if v, ok := n.(valueNode); ok {
 			return !bytes.Equal(v, value.(valueNode)), value, nil
@@ -262,10 +264,10 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
-		matchlen := prefixLen(key, n.Key) // MATCHLEN CHECKS IF KEY MATCHES AND WE HAVE A LEAF NODE: I.E. IF LEAF NODE
+		matchlen := prefixLen(key, n.Key)
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
-		if matchlen == len(n.Key) { // DON'T UNDERSTAND THIS CHECK
+		if matchlen == len(n.Key) { // if leafnode
 			dirty, nn, err := t.insert(n.Val, append(prefix, key[:matchlen]...), key[matchlen:], value)
 			if !dirty || err != nil {
 				return false, n, err
@@ -292,6 +294,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 		return true, &shortNode{key[:matchlen], branch, t.newFlag()}, nil
 
 	case *fullNode:
+		// CHANGE KEY[0] TO JUST BE THE NEXT BIT
+		// child := 0x1 & key[0]
 		dirty, nn, err := t.insert(n.Children[key[0]], append(prefix, key[0]), key[1:], value)
 		if !dirty || err != nil {
 			return false, n, err
@@ -308,6 +312,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 		// We've hit a part of the trie that isn't loaded yet. Load
 		// the node and insert into it. This leaves all child nodes on
 		// the path to the value in the trie.
+		// ??
 		rn, err := t.resolveHash(n, prefix)
 		if err != nil {
 			return false, nil, err

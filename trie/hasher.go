@@ -125,7 +125,7 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 		// Hash the full node's children, caching the newly hashed subtrees
 		collapsed, cached := n.copy(), n.copy()
 
-		for i := 0; i < 16; i++ {
+		for i := 0; i < 2; i++ { // CHANGED TO 2 FROM 16
 			if n.Children[i] != nil {
 				collapsed.Children[i], cached.Children[i], err = h.hash(n.Children[i], db, false)
 				if err != nil {
@@ -135,9 +135,10 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 				collapsed.Children[i] = valueNode(nil) // Ensure that nil children are encoded as empty strings.
 			}
 		}
-		cached.Children[16] = n.Children[16]
-		if collapsed.Children[16] == nil {
-			collapsed.Children[16] = valueNode(nil)
+		// VALUE AT INDEX 2 NOT 16 ANYMORE
+		cached.Children[2] = n.Children[2]
+		if collapsed.Children[2] == nil {
+			collapsed.Children[2] = valueNode(nil)
 		}
 		return collapsed, cached, nil
 

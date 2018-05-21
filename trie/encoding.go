@@ -63,22 +63,50 @@ func compactToHex(compact []byte) []byte {
 	return base[chop:]
 }
 
-// NEED A KEYBYTES TO BIN RIGHT?
+// original
+// func keybytesToHex(str []byte) []byte {
+// 	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
+// 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
+// 	for i, b := range str {
+// 		nibbles[i*2] = b / 16
+// 		nibbles[i*2+1] = b % 16
+// 	}
+// 	nibbles[l-1] = 16
+// 	return nibbles
+// }
+
+// modified
 func keybytesToHex(str []byte) []byte {
-	l := len(str)*2 + 1 // EXTRA BYTE IS ?, AND WHY x2?
+	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
 	for i, b := range str {
 		nibbles[i*2] = b / 16
 		nibbles[i*2+1] = b % 16
 	}
 	nibbles[l-1] = 16
-	return nibbles
+
+
+	var bits = make([]byte, (l-1)*4) // 4 bits per nibble
+	for i, n := range nibbles {
+		if i != len(nibbles)-1 { // if not terminator
+			for j := 0; j < 4; j++ {
+				bits[4*i+j] = (n >> uint(4-j)) & 0x1
+			}
+		}
+	}
+
+	return bits
 }
 
 // WILL BYTES BE BIN OR HEX?
-func keybytesToBin(str []byte) []byte {
-
-}
+// func keybytesToBin(str []byte) []byte {
+// 	l := len(str)*8 + 1
+// 	var bits = make([]byte, l)
+// 	for i, b := range str {
+// 		bits[i]
+// 	}
+//
+// }
 
 // hexToKeybytes turns hex nibbles into key bytes.
 // This can only be used for keys of even length.
@@ -121,13 +149,13 @@ func prefixBitLen(a, b []byte) int {
 	var lenA = len(a)*8
 	var lenB = len(b)*8
 	var i, length = 0, lenA // 8 bits
-	if lebB < length {
+	if lenB < length {
 		length = lenB
 	}
 	for ; i < length; i++ {
 		// check bit by bit for difference
 		var byteIndex = i/8
-		if a[byteIndex] >> (7-i%8) != b[byteIndex] >> (7-i%8) { // if
+		if a[byteIndex] >> uint(7-i%8) != b[byteIndex] >> uint(7-i%8) { // if
 			break
 		}
 	}
