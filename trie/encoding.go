@@ -109,7 +109,6 @@ func keybytesToHex(str []byte) []byte {
 }
 
 // modified
-// change to keybytesToBin later
 func keybytesToBin(str []byte) []byte {
 	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
@@ -148,7 +147,7 @@ func hexToKeybytes(hex []byte) []byte {
 }
 
 // MODIFIED
-// hexToKeybytes turns hex nibbles into key bytes.
+// binToKeybytes turns binary encoded bytes into key bytes.
 // This can only be used for keys of even length.
 func binToKeybytes(bin []byte) []byte {
 	if hasTerm(bin) { // does this have terminator flag?
@@ -157,12 +156,12 @@ func binToKeybytes(bin []byte) []byte {
 	if len(bin)&1 != 0 {
 		panic("can't convert bin key of odd length")
 	}
-	key := make([]byte, (len(bin)+1)/2)
+	key := make([]byte, (len(bin)+1)/8)
 	decodeBits(bin, key)
 	return key
 }
 
-// decode bits into one sequence
+// decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) {
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
@@ -171,7 +170,7 @@ func decodeBits(bits []byte, bytes []byte) {
 	}
 }
 
-
+// decodeNibbles decodes the nibbles into an array of bytes.
 func decodeNibbles(nibbles []byte, bytes []byte) {
 	for bi, ni := 0, 0; ni < len(nibbles); bi, ni = bi+1, ni+2 {
 		bytes[bi] = nibbles[ni]<<4 | nibbles[ni+1]
@@ -192,7 +191,8 @@ func prefixLen(a, b []byte) int {
 	return i
 }
 
-// returns the length of the common prefix of a and b in terms of BITS
+// DON'T NEED (?)
+// prefixBitLen returns the length of the common prefix of a and b in terms of BITS.
 func prefixBitLen(a, b []byte) int {
 	var lenA = len(a)*8
 	var lenB = len(b)*8
