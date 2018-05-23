@@ -60,11 +60,14 @@ func binToCompact(bin []byte) []byte {
 		bin = bin[:len(bin)-1]
 	}
 	buf := make([]byte, len(bin)/8+1)
-	buf[0] = terminator << 5 // the flag byte
+	buf[0] = terminator << 5 // terminator flag byte
 	if len(bin)&1 == 1 {
 		buf[0] |= 1 << 4 // odd flag
-		buf[0] |= bin[0] // first nibble is contained in the first byte
-		bin = bin[1:]
+		buf[0] |= bin[0] // first 4 bits is contained in the first byte
+		buf[0] |= bin[1]
+		buf[0] |= bin[2]
+		buf[0] |= bin[3]
+		bin = bin[4:]
 	}
 	decodeBits(bin, buf[1:])
 	return buf
