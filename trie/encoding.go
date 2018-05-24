@@ -16,6 +16,10 @@
 
 package trie
 
+import (
+	"fmt"
+)
+
 // Trie keys are dealt with in three distinct encodings:
 //
 // KEYBYTES encoding contains the actual key and nothing else. This encoding is the
@@ -113,15 +117,15 @@ func keybytesToHex(str []byte) []byte {
 
 // modified
 func keybytesToBin(str []byte) []byte {
-	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
+	l := len(str)*2 // EXTRA BYTE IS TERMINATOR
 	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
 	for i, b := range str {
 		nibbles[i*2] = b / 16 // set from high nibble
 		nibbles[i*2+1] = b % 16 // set from low nibble
 	}
-	nibbles[l-1] = 16 // set terminator bit
 
-	var bits = make([]byte, (l-1)*4) // 4 bits per nibble
+	l = l*4 + 1 // 4 bits per nibble, extra is terminator
+	var bits = make([]byte, l)
 	for i, n := range nibbles {
 		if i != len(nibbles)-1 { // if not terminator
 			for j := 0; j < 4; j++ {
@@ -129,8 +133,7 @@ func keybytesToBin(str []byte) []byte {
 			}
 		}
 	}
-
-
+	bits[l-1] = 16 // set terminator bit
 	return bits
 }
 
@@ -168,9 +171,13 @@ func binToKeybytes(bin []byte) []byte {
 func decodeBits(bits []byte, bytes []byte) {
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
-			bytes[by] |= bits[bt]
+			bytes[by] |= bits[8*by+bt] << uint(bt)
+			fmt.Printf("by is: %+v", bytes[by])
 		}
+		fmt.Printf("\n")
+
 	}
+	fmt.Printf("%+v\n\n", bytes)
 }
 
 // decodeNibbles decodes the nibbles into an array of bytes.
