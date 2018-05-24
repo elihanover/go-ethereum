@@ -55,6 +55,18 @@ func (n *fullNode) EncodeRLP(w io.Writer) error {
 func (n *fullNode) copy() *fullNode   { copy := *n; return &copy }
 func (n *shortNode) copy() *shortNode { copy := *n; return &copy }
 
+// BinKey returns a binary encoded shortNode key
+func (n *shortNode) BinKey() []byte {
+	l := len(n.Key) * 4
+	bin := make([]byte, l)
+	for i := 0; i < len(n.Key); i++ {
+		for j := 0; j < 4; j++ {
+			bin[4*i+j] = n.Key[i] & (0x8 >> uint(j))
+		}
+	}
+	return bin
+}
+
 // nodeFlag contains caching-related metadata about a node.
 type nodeFlag struct {
 	hash  hashNode // cached hash of the node (may be nil)

@@ -42,12 +42,12 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
 	for len(key) > 0 && tn != nil {
 		switch n := tn.(type) {
 		case *shortNode:
-			if len(key) < len(n.Key) || !bytes.Equal(n.Key, key[:len(n.Key)]) {
+			if len(key) < len(n.BinKey()) || !bytes.Equal(n.BinKey(), key[:len(n.BinKey())]) {
 				// The trie doesn't contain the key.
 				tn = nil
 			} else {
 				tn = n.Val
-				key = key[len(n.Key):]
+				key = key[len(n.BinKey()):]
 			}
 			nodes = append(nodes, n)
 		case *fullNode:
@@ -132,11 +132,11 @@ func get(tn node, key []byte) ([]byte, node) {
 	for {
 		switch n := tn.(type) {
 		case *shortNode:
-			if len(key) < len(n.Key) || !bytes.Equal(n.Key, key[:len(n.Key)]) {
+			if len(key) < len(n.BinKey()) || !bytes.Equal(n.BinKey(), key[:len(n.BinKey())]) {
 				return nil, nil
 			}
 			tn = n.Val
-			key = key[len(n.Key):]
+			key = key[len(n.BinKey()):]
 		case *fullNode:
 			tn = n.Children[key[0]]
 			key = key[1:]

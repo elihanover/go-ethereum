@@ -237,16 +237,3 @@ func mapError(err error) error {
 	}
 	return err
 }
-
-// hexToBin takes array of hex encoded bytes
-// and returns bin encoded bytes
-func HexToBin(hex []byte) []byte {
-	l := len(hex) * 4
-	bin := make([]byte, l)
-	for i := 0; i < len(hex); i++ {
-		for j := 0; j < 4; j++ {
-			bin[4*i+j] = hex[i] & (0x8 >> uint(j))
-		}
-	}
-	return bin
-}
