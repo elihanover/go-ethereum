@@ -55,16 +55,16 @@ func hexToCompact(hex []byte) []byte {
 // Modified
 func binToCompact(bin []byte) []byte {
 	terminator := byte(0)
-	if hasTerm(bin) { // IF THIS IS A LEAF, has terminator
+	if hasTerm(bin) {
 		terminator = 1
 		bin = bin[:len(bin)-1]
 	}
 	buf := make([]byte, len(bin)/8+1)
-	buf[0] = terminator << 5 // terminator flag byte
+	buf[0] = terminator << 5 // terminator flag byte.
 	if len(bin)&1 == 1 {
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] // first 4 bits is contained in the first byte
-		buf[0] |= bin[1]
+		buf[0] |= bin[1] // but what if we only have one bit?
 		buf[0] |= bin[2]
 		buf[0] |= bin[3]
 		bin = bin[4:]

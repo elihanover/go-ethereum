@@ -226,11 +226,14 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 	}
 	statedb, _ := state.New(common.Hash{}, state.NewDatabase(db))
 	for addr, account := range g.Alloc {
-		statedb.AddBalance(addr, account.Balance)
-		statedb.SetCode(addr, account.Code)
-		statedb.SetNonce(addr, account.Nonce)
+		// change address to bin encoding
+		baddr := hexutil.HexToBin(addr.Bytes())
+		
+		statedb.AddBalance(baddr, account.Balance)
+		statedb.SetCode(baddr, account.Code)
+		statedb.SetNonce(baddr, account.Nonce)
 		for key, value := range account.Storage {
-			statedb.SetState(addr, key, value)
+			statedb.SetState(baddr, key, value)
 		}
 	}
 	root := statedb.IntermediateRoot(false)
