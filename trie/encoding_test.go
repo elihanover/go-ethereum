@@ -45,32 +45,38 @@ func TestHexCompact(t *testing.T) {
 	}
 }
 
-func TestHexKeybytes(t *testing.T) {
-	tests := []struct{ key, hexIn, hexOut []byte }{
-		{key: []byte{}, hexIn: []byte{16}, hexOut: []byte{16}},
-		{key: []byte{}, hexIn: []byte{}, hexOut: []byte{16}},
+func TestBinKeybytes(t *testing.T) {
+	tests := []struct{ key, binIn, binOut []byte }{
+		{key: []byte{}, binIn: []byte{16}, binOut: []byte{16}}, // ???
+		{key: []byte{}, binIn: []byte{}, binOut: []byte{16}}, // ???
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			hexIn:  []byte{1, 2, 3, 4, 5, 6, 16},
-			hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 5, 6, 16},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 16},
+			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 16},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x5},
-			hexIn:  []byte{1, 2, 3, 4, 0, 5, 16},
-			hexOut: []byte{1, 2, 3, 4, 0, 5, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 0, 5, 16},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 16},
+			//hexOut: []byte{1, 2, 3, 4, 0, 5, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 16},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			hexIn:  []byte{1, 2, 3, 4, 5, 6},
-			hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 5, 6},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0},
+			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 16},
 		},
 	}
 	for _, test := range tests {
-		if h := keybytesToHex(test.key); !bytes.Equal(h, test.hexOut) {
-			t.Errorf("keybytesToHex(%x) -> %x, want %x", test.key, h, test.hexOut)
+		if h := keybytesToBin(test.key); !bytes.Equal(h, test.binOut) {
+			t.Errorf("keybytesToBin(%x) -> %x, want %x", test.key, h, test.binOut)
 		}
-		if k := hexToKeybytes(test.hexIn); !bytes.Equal(k, test.key) {
-			t.Errorf("hexToKeybytes(%x) -> %x, want %x", test.hexIn, k, test.key)
+		if k := binToKeybytes(test.binIn); !bytes.Equal(k, test.key) {
+			t.Errorf("binToKeybytes(%x) -> %x, want %x", test.binIn, k, test.key)
 		}
 	}
 }
