@@ -171,7 +171,7 @@ func binToKeybytes(bin []byte) []byte {
 func decodeBits(bits []byte, bytes []byte) []byte {
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
-			bytes[by] |= bits[8*by+bt] << uint(bt)
+			bytes[by] |= bits[8*by+7-bt] << uint(bt)
 		}
 	}
 	fmt.Printf("");
