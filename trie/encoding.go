@@ -47,7 +47,7 @@ func hexToCompact(hex []byte) []byte {
 	}
 	buf := make([]byte, len(hex)/2+1)
 	buf[0] = terminator << 5 // the flag byte
-	if len(hex)&1 == 1 {
+	if len(hex)&1 == 1 { // if odd length
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= hex[0] // first nibble is contained in the first byte
 		hex = hex[1:]
@@ -58,6 +58,7 @@ func hexToCompact(hex []byte) []byte {
 
 // Modified
 func binToCompact(bin []byte) []byte {
+	//fmt.Printf("%+v\n", bin)
 	terminator := byte(0)
 	if hasTerm(bin) {
 		terminator = 1
@@ -65,11 +66,11 @@ func binToCompact(bin []byte) []byte {
 	}
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5 // terminator flag byte.
-	if len(bin)&1 == 1 {
+	if len(bin)%8 != 0 { // if odd
 		buf[0] |= 1 << 4 // odd flag
-		buf[0] |= bin[0] // first 4 bits is contained in the first byte
-		buf[0] |= bin[1] // but what if we only have one bit?
-		buf[0] |= bin[2]
+		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
+		buf[0] |= bin[1] << 2// but what if we only have one bit?
+		buf[0] |= bin[2] << 1
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
@@ -93,13 +94,14 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
-	base = base[:len(base)-1] // ?
+	prefix := base[0] << 3 | base[1] << 2 | base[2] << 1 | base[3]
+	base = base[:len(base)-1] // take off terminator bit
 	// apply terminator flag
-	if base[0] >= 2 {
+	if prefix >= 2 {
 		base = append(base, 2) // terminator
 	}
 	// apply odd flag
-	chop := 2 - base[0]&1
+	chop := 4 * (2 - prefix&1)
 	return base[chop:]
 }
 
