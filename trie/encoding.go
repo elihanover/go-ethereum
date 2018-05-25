@@ -96,7 +96,7 @@ func compactToBin(compact []byte) []byte {
 	base = base[:len(base)-1] // ?
 	// apply terminator flag
 	if base[0] >= 2 {
-		base = append(base, 16)
+		base = append(base, 2) // terminator
 	}
 	// apply odd flag
 	chop := 2 - base[0]&1
@@ -133,7 +133,7 @@ func keybytesToBin(str []byte) []byte {
 			}
 		}
 	}
-	bits[l-1] = 16 // set terminator bit
+	bits[l-1] = 2 // set terminator bit
 	return bits
 }
 
@@ -159,25 +159,34 @@ func binToKeybytes(bin []byte) []byte {
 	if hasTerm(bin) { // does this have terminator flag?
 		bin = bin[:len(bin)-1] // if so, drop it
 	}
-	if len(bin)&1 != 0 {
-		panic("can't convert bin key of odd length")
+	if len(bin)%8 != 0 {
+		panic("can't convert bin key, not divisible by 8")
 	}
-	key := make([]byte, (len(bin)+1)/8)
+	key := make([]byte, len(bin)/8)
 	decodeBits(bin, key)
 	return key
 }
 
 // decodeBits into one slice of bytes.
-func decodeBits(bits []byte, bytes []byte) {
+func decodeBits(bits []byte, bytes []byte) []byte {
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
 			bytes[by] |= bits[8*by+bt] << uint(bt)
-			fmt.Printf("by is: %+v", bytes[by])
 		}
-		fmt.Printf("\n")
-
 	}
-	fmt.Printf("%+v\n\n", bytes)
+	fmt.Printf("");
+	return bytes
+}
+
+func testDecodeBits(bits []byte) []byte {
+	bytes := make([]byte, len(bits)/8)
+	for by := 0; by < len(bytes); by++ {
+		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
+			bytes[by] |= bits[8*by+7-bt] << uint(bt)
+		}
+	}
+	fmt.Printf("");
+	return bytes
 }
 
 // decodeNibbles decodes the nibbles into an array of bytes.
@@ -222,5 +231,5 @@ func prefixBitLen(a, b []byte) int {
 
 // hasTerm returns whether a hex key has the terminator flag.
 func hasTerm(s []byte) bool {
-	return len(s) > 0 && s[len(s)-1] == 16
+	return len(s) > 0 && s[len(s)-1] == 2 // terminator 2 instead of 16
 }

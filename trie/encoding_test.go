@@ -21,6 +21,21 @@ import (
 	"testing"
 )
 
+func TestDecodeBits(t *testing.T) {
+	tests := []struct{ bin, bytes []byte}{
+		{bin: []byte{}, bytes: []byte{}}, // empty bin means empty bytes
+		{bin: []byte{1,1,1,1,1,1,1,1}, bytes: []byte{255}},
+		{bin: []byte{0,0,0,0,0,0,0,1}, bytes: []byte{1}},
+		{bin: []byte{1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1}, bytes: []byte{255, 1}},
+		{bin: []byte{1,1,1,1,1,1,1,0}, bytes: []byte{254}},
+	}
+	for _, test := range tests {
+		if b := testDecodeBits(test.bin); !bytes.Equal(b, test.bytes) {
+			t.Errorf("testDecodeBits(%x) -> %x, want %x", test.bin, b, test.bytes)
+		}
+	}
+}
+
 func TestHexCompact(t *testing.T) {
 	tests := []struct{ hex, compact []byte }{
 		// empty keys, with and without terminator.
