@@ -62,6 +62,7 @@ func TestNull(t *testing.T) {
 	value := []byte("test")
 	trie.Update(key, value)
 	if !bytes.Equal(trie.Get(key), value) {
+		fmt.Printf("\n\nwanted: %x,\n got: %x\n\n", value, trie.Get(key))
 		t.Fatal("wrong value")
 	}
 }

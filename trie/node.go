@@ -56,14 +56,16 @@ func (n *fullNode) copy() *fullNode   { copy := *n; return &copy }
 func (n *shortNode) copy() *shortNode { copy := *n; return &copy }
 
 // BinKey returns a binary encoded shortNode key
-func (n *shortNode) BinKey() []byte {
-	l := len(n.Key) * 4
+func (n *shortNode) Bin0Key() []byte {
+	fmt.Printf("\n\n\n\nHELLO\n%x\n\n\n\n", n.Key)
+	l := len(n.Key) * 4 + 1
 	bin := make([]byte, l)
-	for i := 0; i < len(n.Key); i++ {
+	for i := 0; i < len(n.Key)-1; i++ {
 		for j := 0; j < 4; j++ {
 			bin[4*i+j] = n.Key[i] & (0x8 >> uint(j))
 		}
 	}
+	bin[l-1] = 2
 	return bin
 }
 

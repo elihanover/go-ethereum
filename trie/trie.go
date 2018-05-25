@@ -65,7 +65,7 @@ type LeafCallback func(leaf []byte, parent common.Hash) error
 //
 // Trie is not safe for concurrent use.
 type Trie struct {
-	db           *Database // WHAT DB IS THIS PULLING FROM AT START?
+	db           *Database
 	root         node
 	originalRoot common.Hash
 
@@ -153,11 +153,11 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 	case valueNode:
 		return n, n, false, nil
 	case *shortNode:
-		if len(key)-pos < len(n.BinKey()) || !bytes.Equal(n.BinKey(), key[pos:pos+len(n.BinKey())]) {
+		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
 			// key not found in trie
 			return nil, n, false, nil
 		}
-		value, newnode, didResolve, err = t.tryGet(n.Val, key, pos+len(n.BinKey()))
+		value, newnode, didResolve, err = t.tryGet(n.Val, key, pos+len(n.Key))
 		if err == nil && didResolve {
 			n = n.copy()
 			n.Val = newnode
@@ -222,8 +222,6 @@ func (t *Trie) TryUpdate(key, value []byte) error {
 	return nil
 }
 
-
-// ORIGINAL
 func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error) {
 	if len(key) == 0 {
 		if v, ok := n.(valueNode); ok {
@@ -233,21 +231,21 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
-		matchlen := prefixLen(key, n.BinKey())
+		matchlen := prefixLen(key, n.Key)
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
-		if matchlen == len(n.BinKey()) { // if leafnode
+		if matchlen == len(n.Key) { // if leafnode
 			dirty, nn, err := t.insert(n.Val, append(prefix, key[:matchlen]...), key[matchlen:], value)
 			if !dirty || err != nil {
 				return false, n, err
 			}
-			return true, &shortNode{n.BinKey(), nn, t.newFlag()}, nil
+			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.
 		// HERE WE NEED TO BRANCH OUT NOT BY NIBBLE BUT BY BIT
 		branch := &fullNode{flags: t.newFlag()}
 		var err error
-		_, branch.Children[n.BinKey()[matchlen]], err = t.insert(nil, append(prefix, n.BinKey()[:matchlen+1]...), n.BinKey()[matchlen+1:], n.Val)
+		_, branch.Children[n.Key[matchlen]], err = t.insert(nil, append(prefix, n.Key[:matchlen+1]...), n.Key[matchlen+1:], n.Val)
 		if err != nil {
 			return false, nil, err
 		}
@@ -325,18 +323,18 @@ func (t *Trie) TryDelete(key []byte) error {
 func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 	switch n := n.(type) {
 	case *shortNode:
-		matchlen := prefixLen(key, n.BinKey())
-		if matchlen < len(n.BinKey()) {
+		matchlen := prefixLen(key, n.Key)
+		if matchlen < len(n.Key) {
 			return false, n, nil // don't replace n on mismatch
 		}
 		if matchlen == len(key) {
 			return true, nil, nil // remove n entirely for whole matches
 		}
-		// The key is longer than n.BinKey(). Remove the remaining suffix
+		// The key is longer than n.Key. Remove the remaining suffix
 		// from the subtrie. Child can never be nil here since the
 		// subtrie must contain at least two other values with keys
-		// longer than n.BinKey().
-		dirty, child, err := t.delete(n.Val, append(prefix, key[:len(n.BinKey())]...), key[len(n.BinKey()):])
+		// longer than n.Key.
+		dirty, child, err := t.delete(n.Val, append(prefix, key[:len(n.Key)]...), key[len(n.Key):])
 		if !dirty || err != nil {
 			return false, n, err
 		}
@@ -346,11 +344,11 @@ func (t *Trie) delete(n node, prefix, key []byte) (bool, node, error) {
 			// short node. Merge the nodes to avoid creating a
 			// shortNode{..., shortNode{...}}. Use concat (which
 			// always creates a new slice) instead of append to
-			// avoid modifying n.BinKey() since it might be shared with
+			// avoid modifying n.Key since it might be shared with
 			// other nodes.
-			return true, &shortNode{concat(n.BinKey(), child.Key...), child.Val, t.newFlag()}, nil
+			return true, &shortNode{concat(n.Key, child.Key...), child.Val, t.newFlag()}, nil
 		default:
-			return true, &shortNode{n.BinKey(), child, t.newFlag()}, nil
+			return true, &shortNode{n.Key, child, t.newFlag()}, nil
 		}
 
 	case *fullNode:

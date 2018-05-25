@@ -17,6 +17,8 @@
 package trie
 
 import (
+	"fmt"
+
 	"bytes"
 	"container/heap"
 	"errors"
@@ -113,11 +115,14 @@ func (e seekError) Error() string {
 }
 
 func newNodeIterator(trie *Trie, start []byte) NodeIterator {
+	fmt.Printf("\n\nnewNodeIterator start\n\n")
 	if trie.Hash() == emptyState {
 		return new(nodeIterator)
 	}
 	it := &nodeIterator{trie: trie}
 	it.err = it.seek(start)
+	fmt.Printf("\n\n%+v\n\n", it)
+
 	return it
 }
 
