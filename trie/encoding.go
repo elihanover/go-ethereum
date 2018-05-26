@@ -16,10 +16,6 @@
 
 package trie
 
-import (
-	"fmt"
-)
-
 // Trie keys are dealt with in three distinct encodings:
 //
 // KEYBYTES encoding contains the actual key and nothing else. This encoding is the
@@ -58,7 +54,6 @@ func hexToCompact(hex []byte) []byte {
 
 // Modified
 func binToCompact(bin []byte) []byte {
-	//fmt.Printf("%+v\n", bin)
 	terminator := byte(0)
 	if hasTerm(bin) {
 		terminator = 1
@@ -66,7 +61,7 @@ func binToCompact(bin []byte) []byte {
 	}
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5 // terminator flag byte.
-	if len(bin)%8 != 0 { // if odd
+	if (len(bin)/4)&1 == 1 { // if odd
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
 		buf[0] |= bin[1] << 2// but what if we only have one bit?
@@ -168,7 +163,6 @@ func decodeBits(bits []byte, bytes []byte) []byte {
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)
 		}
 	}
-	fmt.Printf("");
 	return bytes
 }
 
@@ -179,7 +173,6 @@ func testDecodeBits(bits []byte) []byte {
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)
 		}
 	}
-	fmt.Printf("");
 	return bytes
 }
 

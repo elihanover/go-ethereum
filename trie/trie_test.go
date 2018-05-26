@@ -118,15 +118,31 @@ func testMissingNode(t *testing.T, memonly bool) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	hash := common.HexToHash("0xe1d943cc8f061a0c0b98162830b970395ac9315654824bf21b73b891365262f9")
+	// goes and deletes ______ nodes out of TRIEDB
+	// hash := common.HexToHash("0xe1d943cc8f061a0c0b98162830b970395ac9315654824bf21b73b891365262f9")
+	hash := common.HexToHash("0x61eaf90780498bb0d4055777c5df4367f875f3cbf50949f85261515311a6b73a")
 	if memonly {
-		delete(triedb.nodes, hash)
+		// fmt.Println("111111")
+		// fmt.Printf("predelete:\n")
+		// for k, v := range triedb.nodes {
+		// 	fmt.Printf("k: %x\n", k)
+		// 	fmt.Printf("v: " + string(v.blob) + "\n")
+		// }
+		delete(triedb.nodes, hash) // WHAT IS THIS DELETE??
+		// fmt.Printf("pstdelete: %+v\n", triedb.nodes)
+		// for k, v := range triedb.nodes {
+		// 	fmt.Printf("k: %x\n", k)
+		// 	fmt.Printf("v: " + string(v.blob) + "\n")
+		// }
 	} else {
-		diskdb.Delete(hash[:])
+		// fmt.Println("222222")
+		diskdb.Delete(hash[:]) // ethdb.Delete(), follow functions called
 	}
 
 	trie, _ = New(root, triedb)
+	// fmt.Printf("\n\nSTART tryGet\n\n")
 	_, err = trie.TryGet([]byte("120000"))
+	// fmt.Printf("\n\nEND tryGet\n\n")
 	if _, ok := err.(*MissingNodeError); !ok {
 		t.Errorf("Wrong error: %v", err)
 	}
@@ -136,6 +152,12 @@ func testMissingNode(t *testing.T, memonly bool) {
 		t.Errorf("Wrong error: %v", err)
 	}
 	trie, _ = New(root, triedb)
+	fmt.Printf("111111")
+	for k, v := range triedb.nodes {
+		fmt.Printf("k: %x\n", k)
+		fmt.Printf("v: " + string(v.blob) + "\n")
+	}
+	fmt.Printf("222222")
 	_, err = trie.TryGet([]byte("123456"))
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
@@ -167,6 +189,10 @@ func TestInsert(t *testing.T) {
 
 	trie = newEmpty()
 	updateString(trie, "A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	updateString(trie, "B", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+	updateString(trie, "C", "yabadabadoo")
+	deleteString(trie, "B")
+	deleteString(trie, "C")
 
 	exp = common.HexToHash("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab")
 	root, err := trie.Commit(nil)
@@ -175,6 +201,8 @@ func TestInsert(t *testing.T) {
 	}
 	if root != exp {
 		t.Errorf("exp %x got %x", exp, root)
+	} else {
+		t.Errorf("\n\n\nWorked\n\n\n")
 	}
 }
 
