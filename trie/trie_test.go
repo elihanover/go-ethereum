@@ -306,18 +306,58 @@ func TestReplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("can't recreate trie at %x: %v", exp, err)
 	}
-	fmt.Printf("\n\nnew tests\n\n")
 
 	// test tries
-	fmt.Printf("\n\ntrie: %+v", trie)
-	fmt.Printf("\n\ntrie2: %+v", trie2)
+	// fmt.Printf("\n\ntrie: %+v", trie)
+	// fmt.Printf("\n\ntrie2: %+v", trie2)
 
-	fmt.Printf("\n\nend new tests\n\n")
+	// fmt.Printf("\n\nend new tests\n\n")
 
 	// // compare nodes in dbs
-	// fmt.Printf("\ndb1: %+v", trie.db.Nodes())
-	// fmt.Printf("\ndb2: %+v", trie2.db.Nodes())
+	// nodes1 := trie.db.Nodes()
+	// fmt.Printf("\ndb1: %+v\n", nodes1)
+	// for _, n := range nodes1 {
+	// 	// get the node encoding from db
+	// 	enc, _ := trie.db.Node(n)
+	// 	// get elems
+	// 	elems, _, _ := rlp.SplitList(enc)
+	// 	//
 	//
+	// 	fmt.Printf("node: %+v\n", n)
+	//
+	// 	// check what sort of nodes
+	// 	switch c, _ := rlp.CountValues(elems); c {
+	// 	case 2:
+	// 		fmt.Printf("Node is short\n")
+	// 	case 3:
+	// 		fmt.Printf("Node is full\n")
+	// 	default:
+	// 		fmt.Printf("invalid number of elements\n")
+	// 	}
+	// }
+	//
+	// nodes2 := trie2.db.Nodes()
+	// fmt.Printf("\ndb2: %+v\n", nodes2)
+	// for _, n := range nodes2 {
+	// 	// get the node encoding from db
+	// 	enc, _ := trie.db.Node(n)
+	// 	// get elems
+	// 	elems, _, _ := rlp.SplitList(enc)
+	// 	//
+	// 	fmt.Printf("node: %+v\n", n)
+	//
+	// 	// check what sort of nodes
+	// 	switch c, _ := rlp.CountValues(elems); c {
+	// 	case 2:
+	// 		fmt.Printf("Node is short\n")
+	// 	case 3:
+	// 		fmt.Printf("Node is full\n")
+	// 	default:
+	// 		fmt.Printf("invalid number of elements\n")
+	// 	}
+	// }
+
+
 	// // RESOLVE HASH RETURNS THE SAME THINGS SO EITHER THE
 	// // trie.resolveHash(exp[:], nil)
 	// // trie2.resolveHash(exp[:], nil)
@@ -349,8 +389,8 @@ func TestReplication(t *testing.T) {
 	// }
 
 	// now check direct access using these keys
-	fmt.Printf("do1: %s\n", string(getString(trie, "do")))
-	fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
+	// fmt.Printf("do1: %s\n", string(getString(trie, "do")))
+	// fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
 
 	// check db.Nodes: all there, but in different order each time, so order probably doesn't matter
 	//fmt.Printf("triedb: %+v\n", trie.db.Nodes())

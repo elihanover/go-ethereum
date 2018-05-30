@@ -132,18 +132,15 @@ func mustDecodeNode(hash, buf []byte, cachegen uint16) node {
 func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 	fmt.Printf("\nDecode node: %+v\n", hash)
 	if len(buf) == 0 {
-		fmt.Printf("CASE0")
 		return nil, io.ErrUnexpectedEOF
 	}
 	elems, _, err := rlp.SplitList(buf)
 	if err != nil {
-		fmt.Printf("CASE1")
 		return nil, fmt.Errorf("decode error: %v", err)
 	}
 	switch c, _ := rlp.CountValues(elems); c {
 	case 2:
 		fmt.Printf("Node is short\n")
-		fmt.Printf("Elems: %+v\n\n", elems)
 		n, err := decodeShort(hash, elems, cachegen)
 		return n, wrapError(err, "short")
 	case 3:
@@ -159,11 +156,13 @@ func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 	fmt.Printf("Decode short: %+v", hash)
 	kbuf, rest, err := rlp.SplitString(elems)
+	fmt.Printf("\nkbuf: %x, rest: %x\n", kbuf, rest)
 	if err != nil {
 		return nil, err
 	}
 	flag := nodeFlag{hash: hash, gen: cachegen}
-	key := compactToBin(kbuf)
+	key := compactToBin(kbuf) // nothing returned...no path further, and no terminator
+	fmt.Printf("shortnode bin key: %x", key)
 	if hasTerm(key) {
 		fmt.Printf("\nLEAFNODE\n")
 		// value node
