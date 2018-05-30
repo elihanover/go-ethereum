@@ -181,7 +181,7 @@ func TestInsert(t *testing.T) {
 	updateString(trie, "dog", "puppy")
 	updateString(trie, "dogglesworth", "cat")
 
-	exp := common.HexToHash("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3")
+	exp := common.HexToHash("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3") // this is for hex encoded trie
 	root := trie.Hash()
 	if root != exp {
 		t.Errorf("exp %x got %x", exp, root)
@@ -301,13 +301,70 @@ func TestReplication(t *testing.T) {
 	}
 
 	// create a new trie on top of the database and check that lookups work.
+	fmt.Printf("\n\nnew guy\n\n")
 	trie2, err := New(exp, trie.db)
 	if err != nil {
 		t.Fatalf("can't recreate trie at %x: %v", exp, err)
 	}
+	fmt.Printf("\n\nnew tests\n\n")
+
+	// test tries
+	fmt.Printf("\n\ntrie: %+v", trie)
+	fmt.Printf("\n\ntrie2: %+v", trie2)
+
+	fmt.Printf("\n\nend new tests\n\n")
+
+	// // compare nodes in dbs
+	// fmt.Printf("\ndb1: %+v", trie.db.Nodes())
+	// fmt.Printf("\ndb2: %+v", trie2.db.Nodes())
+	//
+	// // RESOLVE HASH RETURNS THE SAME THINGS SO EITHER THE
+	// // trie.resolveHash(exp[:], nil)
+	// // trie2.resolveHash(exp[:], nil)
+	//
+	// // compare root hashes
+	// // HASH1 == HASH2, but trie.root != trie2.root
+	// fmt.Printf("\ntrie root hash: %x\n", trie.Hash())
+	// fmt.Printf("trie2 root hash: %x\n", trie2.Hash())
+
+	// compare roots
+	fmt.Printf("\n\ntrie root: %+v\n", trie.root)
+	fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
+
+	// // test result of trie2.root
+	// fmt.Printf("\n\ntrie2 root bytes: %x\n\n", trie2.root)
+
+	// print out KV pairs
+	// it1 := NewIterator(trie.NodeIterator(nil))
+	// found := make(map[string]string)
+	// for it1.Next() { // NEVER GET INTO HERE
+	// 	fmt.Printf("it1.key: %x, it1.Value: %x\n", it1.Key, it1.Value)
+	// 	found[string(it1.Key)] = string(it1.Value)
+	// }
+	// it2 := NewIterator(trie2.NodeIterator(nil))
+	// found2 := make(map[string]string)
+	// for it2.Next() { // NEVER GET INTO HERE
+	// 	fmt.Printf("it2.key: %x, it2.Value: %x\n", it2.Key, it2.Value)
+	// 	found2[string(it2.Key)] = string(it2.Value)
+	// }
+
+	// now check direct access using these keys
+	fmt.Printf("do1: %s\n", string(getString(trie, "do")))
+	fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
+
+	// check db.Nodes: all there, but in different order each time, so order probably doesn't matter
+	//fmt.Printf("triedb: %+v\n", trie.db.Nodes())
+	//fmt.Printf("trie2db: %+v\n", trie2.db.Nodes())
+
+
+	//
+
+
 	for _, kv := range vals {
+		// if string(getString(trie, kv.k)) != string(getString(trie2, kv.k)) {
 		if string(getString(trie2, kv.k)) != kv.v {
-			t.Errorf("trie2 doesn't have %q => %q", kv.k, kv.v)
+			//t.Errorf("trie2 doesn't have %q => %q", kv.k, kv.v)
+			t.Errorf("trie has %q => %q\nwhen trie2 has %q => %q", kv.k, string(getString(trie, kv.k)), kv.k, string(getString(trie2, kv.k)))
 		}
 	}
 	hash, err := trie2.Commit(nil)

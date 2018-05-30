@@ -102,11 +102,12 @@ func New(root common.Hash, db *Database) (*Trie, error) {
 		originalRoot: root,
 	}
 	if (root != common.Hash{}) && root != emptyRoot {
-		rootnode, err := trie.resolveHash(root[:], nil)
+		rootnode, err := trie.resolveHash(root[:], nil) // RETURNING WRONG ROOTNODE
 		if err != nil {
 			return nil, err
 		}
 		trie.root = rootnode
+		fmt.Printf("trie.root: %+v\n", trie.root)
 	}
 	return trie, nil
 }
@@ -131,7 +132,9 @@ func (t *Trie) Get(key []byte) []byte {
 // The value bytes must not be modified by the caller.
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryGet(key []byte) ([]byte, error) {
+	fmt.Printf("\nTryGet: %s\n", string(key))
 	key = keybytesToBin(key)
+	fmt.Printf("\nGet from trie: %+v\n", t.root)
 	value, newroot, didResolve, err := t.tryGet(t.root, key, 0)
 	if err == nil && didResolve {
 		t.root = newroot
@@ -152,9 +155,14 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 	case nil:
 		return nil, nil, false, nil
 	case valueNode:
+		fmt.Printf("\nDepth: %v", pos)
+		fmt.Printf("\nValue node key: %x\n", key[:pos])
+		fmt.Printf("Value Node: %+v\n", n)
 		return n, n, false, nil
 	case *shortNode:
-		// fmt.Printf("shortnode key: %x\n\n", n.Key)
+		// fmt.Printf("\nShort Node: %+v\n", n)
+		fmt.Printf("\nDepth: %v", pos)
+		fmt.Printf("\nshortnode key: %x\n", key[:pos])
 		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
 			// fmt.Printf("\n01\n")
 			// key not found in trie
@@ -169,9 +177,12 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 			n.flags.gen = t.cachegen
 		}
 		// fmt.Printf("\n04\n")
+		fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case *fullNode:
-		// fmt.Printf("fullnode key:\n\n")
+		// fmt.Printf("\nFull Node: %+v\n", n)
+		fmt.Printf("\nDepth: %v", pos)
+		fmt.Printf("\nfullnode key: %x\n", key[:pos])
 		value, newnode, didResolve, err = t.tryGet(n.Children[key[pos]], key, pos+1)
 		if err == nil && didResolve {
 			// fmt.Printf("\n11\n")
@@ -180,6 +191,7 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 			n.Children[key[pos]] = newnode
 		}
 		// fmt.Printf("\n12\n")
+		// fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case hashNode:
 		// fmt.Printf("hashnode\n\n")
@@ -466,7 +478,13 @@ func (t *Trie) resolveHash(n hashNode, prefix []byte) (node, error) {
 	if err != nil || enc == nil {
 		return nil, &MissingNodeError{NodeHash: hash, Path: prefix}
 	}
-	return mustDecodeNode(n, enc, t.cachegen), nil
+
+	fmt.Printf("\nmustDecode: %+v", n)
+	fmt.Printf("\nfrom decoding: %+v\n\nBEGIN DECODE\n\n", enc)
+	// return mustDecodeNode(n, enc, t.cachegen), nil // potential prob 2: mustDecodeNode is a spicy, spicy cunt, indeed
+	node := mustDecodeNode(n, enc, t.cachegen)
+	fmt.Printf("\nresolvedHash: %+v\n", node)
+	return node, nil
 }
 
 // Root returns the root hash of the trie.

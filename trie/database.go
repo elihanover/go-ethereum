@@ -17,6 +17,8 @@
 package trie
 
 import (
+	"fmt"
+
 	"sync"
 	"time"
 
@@ -121,15 +123,19 @@ func (db *Database) insertPreimage(hash common.Hash, preimage []byte) {
 // Node retrieves a cached trie node from memory. If it cannot be found cached,
 // the method queries the persistent database for the content.
 func (db *Database) Node(hash common.Hash) ([]byte, error) {
+	fmt.Printf("Lookup hash in db: %+v", hash)
+
 	// Retrieve the node from cache if available
 	db.lock.RLock()
-	node := db.nodes[hash]
+	node := db.nodes[hash]// this exists, but is it the right node?
 	db.lock.RUnlock()
 
 	if node != nil {
+		fmt.Printf("\n\nAINT NOT NIL\n\n")
 		return node.blob, nil
 	}
 	// Content unavailable in memory, attempt to retrieve from disk
+	fmt.Printf("\n\nAINT AINT NOT NIL\n\n")
 	return db.diskdb.Get(hash[:])
 }
 

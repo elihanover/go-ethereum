@@ -123,31 +123,41 @@ func mustDecodeNode(hash, buf []byte, cachegen uint16) node {
 	if err != nil {
 		panic(fmt.Sprintf("node %x: %v", hash, err))
 	}
+	fmt.Printf("\n\nEND DECODE\n")
+	fmt.Printf("Got: %+v", n)
 	return n
 }
 
 // decodeNode parses the RLP encoding of a trie node.
 func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
+	fmt.Printf("\nDecode node: %+v\n", hash)
 	if len(buf) == 0 {
+		fmt.Printf("CASE0")
 		return nil, io.ErrUnexpectedEOF
 	}
 	elems, _, err := rlp.SplitList(buf)
 	if err != nil {
+		fmt.Printf("CASE1")
 		return nil, fmt.Errorf("decode error: %v", err)
 	}
 	switch c, _ := rlp.CountValues(elems); c {
 	case 2:
+		fmt.Printf("Node is short\n")
+		fmt.Printf("Elems: %+v\n\n", elems)
 		n, err := decodeShort(hash, elems, cachegen)
 		return n, wrapError(err, "short")
 	case 3:
+		fmt.Printf("Node is full\n\n")
 		n, err := decodeFull(hash, elems, cachegen)
 		return n, wrapError(err, "full")
 	default:
+		fmt.Printf("CASE4")
 		return nil, fmt.Errorf("invalid number of list elements: %v", c)
 	}
 }
 
 func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
+	fmt.Printf("Decode short: %+v", hash)
 	kbuf, rest, err := rlp.SplitString(elems)
 	if err != nil {
 		return nil, err
@@ -155,21 +165,25 @@ func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 	flag := nodeFlag{hash: hash, gen: cachegen}
 	key := compactToBin(kbuf)
 	if hasTerm(key) {
+		fmt.Printf("\nLEAFNODE\n")
 		// value node
 		val, _, err := rlp.SplitString(rest)
 		if err != nil {
 			return nil, fmt.Errorf("invalid value node: %v", err)
 		}
+		fmt.Printf("\nDECODEVAL: %x\nString: %s\n", val, string(val))
 		return &shortNode{key, append(valueNode{}, val...), flag}, nil
 	}
 	r, _, err := decodeRef(rest, cachegen)
 	if err != nil {
 		return nil, wrapError(err, "val")
 	}
+	fmt.Printf("\ndecoded short as: %+v\n", &shortNode{key, r, flag})
 	return &shortNode{key, r, flag}, nil
 }
 
 func decodeFull(hash, elems []byte, cachegen uint16) (*fullNode, error) {
+	fmt.Printf("\nDecode full: %x", hash)
 	n := &fullNode{flags: nodeFlag{hash: hash, gen: cachegen}}
 	for i := 0; i < 2; i++ {
 		cld, rest, err := decodeRef(elems, cachegen)

@@ -17,8 +17,6 @@
 package trie
 
 import (
-	"fmt"
-
 	"bytes"
 	"testing"
 )
@@ -39,7 +37,6 @@ func TestDecodeBits(t *testing.T) {
 }
 
 func TestBinCompact(t *testing.T) {
-    fmt.Println("BINARY encoding test start")
     tests := []struct{ bin, compact []byte }{
         // empty keys, with and without terminator.
         {bin: []byte{}, compact: []byte{0x00}},
