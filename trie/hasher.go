@@ -17,6 +17,8 @@
 package trie
 
 import (
+	"fmt"
+
 	"bytes"
 	"hash"
 	"sync"
@@ -57,6 +59,7 @@ func (h *hasher) hash(n node, db *Database, force bool) (node, node, error) {
 	// If we're not storing the node, just hashing, use available cached data
 	if hash, dirty := n.cache(); hash != nil {
 		if db == nil {
+			fmt.Printf("midhash 1")
 			return hash, n, nil
 		}
 		if n.canUnload(h.cachegen, h.cachelimit) {
@@ -94,6 +97,7 @@ func (h *hasher) hash(n node, db *Database, force bool) (node, node, error) {
 			cn.flags.dirty = false
 		}
 	}
+	fmt.Printf("\nend hashed\n")
 	return hashed, cached, nil
 }
 

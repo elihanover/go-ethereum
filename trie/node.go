@@ -41,7 +41,7 @@ type (
 	shortNode struct {
 		Key   []byte
 		Val   node
-		flags nodeFlag
+		flags nodeFlag // NEED TO CHANGE THESE?
 	}
 	hashNode  []byte
 	valueNode []byte
@@ -166,14 +166,14 @@ func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 	if hasTerm(key) {
 		fmt.Printf("\nLEAFNODE\n")
 		// value node
-		val, _, err := rlp.SplitString(rest)
+		val, _, err := rlp.SplitString(rest) // get value from leaf node
 		if err != nil {
 			return nil, fmt.Errorf("invalid value node: %v", err)
 		}
 		fmt.Printf("\nDECODEVAL: %x\nString: %s\n", val, string(val))
 		return &shortNode{key, append(valueNode{}, val...), flag}, nil
 	}
-	r, _, err := decodeRef(rest, cachegen)
+	r, _, err := decodeRef(rest, cachegen) // get value from extension node
 	if err != nil {
 		return nil, wrapError(err, "val")
 	}
@@ -205,11 +205,14 @@ const hashLen = len(common.Hash{})
 
 func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	kind, val, rest, err := rlp.Split(buf)
+	fmt.Printf("\nkind: %x\nval: %x\nrest: %x\n", kind, val, rest)
 	if err != nil {
+		fmt.Println("T0")
 		return nil, buf, err
 	}
 	switch {
 	case kind == rlp.List:
+		fmt.Println("T1")
 		// 'embedded' node reference. The encoding must be smaller
 		// than a hash in order to be valid.
 		if size := len(buf) - len(rest); size > hashLen {
@@ -219,9 +222,11 @@ func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 		n, err := decodeNode(nil, buf, cachegen)
 		return n, rest, err
 	case kind == rlp.String && len(val) == 0:
+		fmt.Println("T2")
 		// empty node
 		return nil, rest, nil
-	case kind == rlp.String && len(val) == 32:
+	case kind == rlp.String && len(val) == 32:// what is this 32?  and should it be changed??
+		fmt.Println("T3")
 		return append(hashNode{}, val...), rest, nil
 	default:
 		return nil, nil, fmt.Errorf("invalid RLP string size %d (want 0 or 32)", len(val))
