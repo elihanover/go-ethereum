@@ -97,7 +97,7 @@ func (h *hasher) hash(n node, db *Database, force bool) (node, node, error) {
 			cn.flags.dirty = false
 		}
 	}
-	fmt.Printf("\nend hashed\n")
+	fmt.Printf("\nend hashed, got: %+v\ngot:%+v\n", hashed, cached)
 	return hashed, cached, nil
 }
 

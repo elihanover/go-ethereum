@@ -123,14 +123,13 @@ func mustDecodeNode(hash, buf []byte, cachegen uint16) node {
 	if err != nil {
 		panic(fmt.Sprintf("node %x: %v", hash, err))
 	}
-	fmt.Printf("\n\nEND DECODE\n")
-	fmt.Printf("Got: %+v", n)
+	// fmt.Printf("Got: %+v", n)
 	return n
 }
 
 // decodeNode parses the RLP encoding of a trie node.
 func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
-	fmt.Printf("\nDecode node: %+v\n", hash)
+	// fmt.Printf("\nDecode node: %+v\n", hash)
 	if len(buf) == 0 {
 		return nil, io.ErrUnexpectedEOF
 	}
@@ -140,49 +139,49 @@ func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 	}
 	switch c, _ := rlp.CountValues(elems); c {
 	case 2:
-		fmt.Printf("Node is short\n")
+		// fmt.Printf("Node is short\n")
 		n, err := decodeShort(hash, elems, cachegen)
 		return n, wrapError(err, "short")
 	case 3:
-		fmt.Printf("Node is full\n\n")
+		// fmt.Printf("Node is full\n\n")
 		n, err := decodeFull(hash, elems, cachegen)
 		return n, wrapError(err, "full")
 	default:
-		fmt.Printf("CASE4")
+		// fmt.Printf("CASE4")
 		return nil, fmt.Errorf("invalid number of list elements: %v", c)
 	}
 }
 
 func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
-	fmt.Printf("Decode short: %+v", hash)
+	// fmt.Printf("Decode short: %+v", hash)
 	kbuf, rest, err := rlp.SplitString(elems)
-	fmt.Printf("\nkbuf: %x, rest: %x\n", kbuf, rest)
+	// fmt.Printf("\nkbuf: %x, rest: %x\n", kbuf, rest)
 	if err != nil {
 		return nil, err
 	}
 	flag := nodeFlag{hash: hash, gen: cachegen}
 	key := compactToBin(kbuf) // nothing returned...no path further, and no terminator
-	fmt.Printf("shortnode bin key: %x", key)
+	// fmt.Printf("shortnode bin key: %x", key)
 	if hasTerm(key) {
-		fmt.Printf("\nLEAFNODE\n")
+		// fmt.Printf("\nLEAFNODE\n")
 		// value node
 		val, _, err := rlp.SplitString(rest) // get value from leaf node
 		if err != nil {
 			return nil, fmt.Errorf("invalid value node: %v", err)
 		}
-		fmt.Printf("\nDECODEVAL: %x\nString: %s\n", val, string(val))
+		// fmt.Printf("\nDECODEVAL: %x\nString: %s\n", val, string(val))
 		return &shortNode{key, append(valueNode{}, val...), flag}, nil
 	}
 	r, _, err := decodeRef(rest, cachegen) // get value from extension node
 	if err != nil {
 		return nil, wrapError(err, "val")
 	}
-	fmt.Printf("\ndecoded short as: %+v\n", &shortNode{key, r, flag})
+	// fmt.Printf("\ndecoded short as: %+v\n", &shortNode{key, r, flag})
 	return &shortNode{key, r, flag}, nil
 }
 
 func decodeFull(hash, elems []byte, cachegen uint16) (*fullNode, error) {
-	fmt.Printf("\nDecode full: %x", hash)
+	// fmt.Printf("\nDecode full: %x", hash)
 	n := &fullNode{flags: nodeFlag{hash: hash, gen: cachegen}}
 	for i := 0; i < 2; i++ {
 		cld, rest, err := decodeRef(elems, cachegen)
@@ -205,14 +204,14 @@ const hashLen = len(common.Hash{})
 
 func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	kind, val, rest, err := rlp.Split(buf)
-	fmt.Printf("\nkind: %x\nval: %x\nrest: %x\n", kind, val, rest)
+	// fmt.Printf("\nkind: %x\nval: %x\nrest: %x\n", kind, val, rest)
 	if err != nil {
-		fmt.Println("T0")
+		// fmt.Println("T0")
 		return nil, buf, err
 	}
 	switch {
 	case kind == rlp.List:
-		fmt.Println("T1")
+		// fmt.Println("T1")
 		// 'embedded' node reference. The encoding must be smaller
 		// than a hash in order to be valid.
 		if size := len(buf) - len(rest); size > hashLen {
@@ -222,11 +221,11 @@ func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 		n, err := decodeNode(nil, buf, cachegen)
 		return n, rest, err
 	case kind == rlp.String && len(val) == 0:
-		fmt.Println("T2")
+		// fmt.Println("T2")
 		// empty node
 		return nil, rest, nil
 	case kind == rlp.String && len(val) == 32:// what is this 32?  and should it be changed??
-		fmt.Println("T3")
+		// fmt.Println("T3")
 		return append(hashNode{}, val...), rest, nil
 	default:
 		return nil, nil, fmt.Errorf("invalid RLP string size %d (want 0 or 32)", len(val))

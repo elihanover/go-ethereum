@@ -18,6 +18,8 @@
 package trie
 
 import (
+	"strings"
+
 	"bytes"
 	"fmt"
 
@@ -486,11 +488,8 @@ func (t *Trie) resolveHash(n hashNode, prefix []byte) (node, error) {
 		return nil, &MissingNodeError{NodeHash: hash, Path: prefix}
 	}
 
-	fmt.Printf("\nmustDecode: %+v", n)
-	fmt.Printf("\nfrom decoding: %+v\n\nBEGIN DECODE\n\n", enc)
 	// return mustDecodeNode(n, enc, t.cachegen), nil // potential prob 2: mustDecodeNode is a spicy, spicy cunt, indeed
 	node := mustDecodeNode(n, enc, t.cachegen)
-	fmt.Printf("\nresolvedHash: %+v\n", node)
 	return node, nil
 }
 
@@ -531,28 +530,35 @@ func (t *Trie) hashRoot(db *Database, onleaf LeafCallback) (node, node, error) {
 }
 
 // Decode any hash nodes from input node
-func (t *Trie) Decode(rootnode node) {
+func (t *Trie) Decode(rootnode node, spaces int) {
+	padding := strings.Repeat(" ", spaces) //space padding for visualization
+
 	// go and decode hash nodes
 	switch n := (rootnode).(type) {
 	// case nil:
 	// 	return nil, nil, false, nil
-	// case valueNode:
-	// 	return n, n, false, nil
+	case valueNode:
+		fmt.Printf(string(n))
 	case *shortNode:
 		// if extension, decode val
-		t.Decode(n.Val)
+		fmt.Printf("%+v", n.Key)
+		t.Decode(n.Val, spaces+2)
 	case *fullNode:
-		for _, child := range n.Children {
+		fmt.Printf("[\n")
+		for i, child := range n.Children {
 			// get childnode from key
-			t.Decode(child)
+			fmt.Printf(padding + "  " + "%d: ", i)
+			t.Decode(child, spaces+5)
+			fmt.Println()
 		}
+		fmt.Printf(padding + "]\n")
 	case hashNode:
 		child, err := t.resolveHash(n, []byte{})
 		if err != nil {
 			return
 		}
-		fmt.Printf("\ndecoded: %+v", child)
-		t.Decode(child)
+		// fmt.Printf(padding + "%+v\n", child)
+		t.Decode(child, spaces+1)
 	default:
 		fmt.Sprintf("%T: invalid node: %v", rootnode, rootnode)
 	}

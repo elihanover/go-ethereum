@@ -282,6 +282,7 @@ func TestEmptyValues(t *testing.T) {
 }
 
 func TestReplication(t *testing.T) {
+	fmt.Printf("\n\nSTARTREP\n\n")
 	trie := newEmpty()
 	vals := []struct{ k, v string }{
 		{"do", "verb"},
@@ -295,7 +296,9 @@ func TestReplication(t *testing.T) {
 	for _, val := range vals {
 		updateString(trie, val.k, val.v)
 	}
+	fmt.Printf("test2")
 	exp, err := trie.Commit(nil)
+	fmt.Printf("test3")
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
@@ -307,74 +310,16 @@ func TestReplication(t *testing.T) {
 		t.Fatalf("can't recreate trie at %x: %v", exp, err)
 	}
 
-	// test tries
-	// fmt.Printf("\n\ntrie: %+v", trie)
-	// fmt.Printf("\n\ntrie2: %+v", trie2)
-
-	// fmt.Printf("\n\nend new tests\n\n")
-
-	// // compare nodes in dbs
-	// nodes1 := trie.db.Nodes()
-	// fmt.Printf("\ndb1: %+v\n", nodes1)
-	// for _, n := range nodes1 {
-	// 	// get the node encoding from db
-	// 	enc, _ := trie.db.Node(n)
-	// 	// get elems
-	// 	elems, _, _ := rlp.SplitList(enc)
-	// 	//
-	//
-	// 	fmt.Printf("node: %+v\n", n)
-	//
-	// 	// check what sort of nodes
-	// 	switch c, _ := rlp.CountValues(elems); c {
-	// 	case 2:
-	// 		fmt.Printf("Node is short\n")
-	// 	case 3:
-	// 		fmt.Printf("Node is full\n")
-	// 	default:
-	// 		fmt.Printf("invalid number of elements\n")
-	// 	}
-	// }
-	//
-	// nodes2 := trie2.db.Nodes()
-	// fmt.Printf("\ndb2: %+v\n", nodes2)
-	// for _, n := range nodes2 {
-	// 	// get the node encoding from db
-	// 	enc, _ := trie.db.Node(n)
-	// 	// get elems
-	// 	elems, _, _ := rlp.SplitList(enc)
-	// 	//
-	// 	fmt.Printf("node: %+v\n", n)
-	//
-	// 	// check what sort of nodes
-	// 	switch c, _ := rlp.CountValues(elems); c {
-	// 	case 2:
-	// 		fmt.Printf("Node is short\n")
-	// 	case 3:
-	// 		fmt.Printf("Node is full\n")
-	// 	default:
-	// 		fmt.Printf("invalid number of elements\n")
-	// 	}
-	// }
-
-
-	// RESOLVE HASH RETURNS THE SAME THINGS SO EITHER RESOLVEHASH IS BROKEN OR
-	// ...
-	// trie.resolveHash(exp[:], nil)
-	// trie2.resolveHash(exp[:], nil)
-
-	// compare root hashes
-	// HASH1 == HASH2, but trie.root != trie2.root
-	// fmt.Printf("\ntrie root hash: %x\n", trie.Hash())
-	// fmt.Printf("trie2 root hash: %x\n", trie2.Hash())
+	///////////////
+	 // Testing //
+	///////////////
 
 	// compare roots
-	fmt.Printf("\n\ntrie root: %+v\n", trie.root)
-	trie2.Decode(trie2.root)
+	trie.Decode(trie.root, 0)
+	fmt.Printf("t2\n")
+	trie2.Decode(trie2.root, 0)
+	fmt.Printf("done\n")
 	fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
-
-	// // test result of trie2.root
-	// fmt.Printf("\n\ntrie2 root bytes: %x\n\n", trie2.root)
 
 	// print out KV pairs
 	// it1 := NewIterator(trie.NodeIterator(nil))
@@ -391,8 +336,8 @@ func TestReplication(t *testing.T) {
 	// }
 
 	// now check direct access using these keys
-	// fmt.Printf("do1: %s\n", string(getString(trie, "do")))
-	// fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
+	fmt.Printf("do1: %s\n", string(getString(trie, "do")))
+	fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
 
 	// check db.Nodes: all there, but in different order each time, so order probably doesn't matter
 	//fmt.Printf("triedb: %+v\n", trie.db.Nodes())
