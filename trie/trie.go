@@ -157,22 +157,22 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 	case nil:
 		return nil, nil, false, nil
 	case valueNode:
-		fmt.Printf("\nDepth: %v", pos)
-		fmt.Printf("\nValue node key: %x\n", key[:pos])
-		fmt.Printf("Value Node: %+v\n", n)
+		// fmt.Printf("\nDepth: %v", pos)
+		// fmt.Printf("\nValue node key: %x\n", key[:pos])
+		// fmt.Printf("Value Node: %+v\n", n)
 		return n, n, false, nil
 	case *shortNode:
 		// fmt.Printf("\nShort Node: %+v\n", n)
-		fmt.Printf("\nDepth: %v", pos)
-		fmt.Printf("\nshortnode: %+v\n", n)
-		fmt.Printf("\nshortnode key: %+v\n", n.Key)
+		// fmt.Printf("\nDepth: %v", pos)
+		// fmt.Printf("\nshortnode: %+v\n", n)
+		// fmt.Printf("\nshortnode key: %+v\n", n.Key)
 		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
 			fmt.Printf("\n01\n")
 			// key not found in trie
 			return nil, n, false, nil
 		}
-		fmt.Println("hi")
-		fmt.Printf("tryGet(val= %+v, key= %+v, pos=%x \n", n.Val, key, pos+len(n.Key))
+		// fmt.Println("hi")
+		// fmt.Printf("tryGet(val= %+v, key= %+v, pos=%x \n", n.Val, key, pos+len(n.Key))
 		value, newnode, didResolve, err = t.tryGet(n.Val, key, pos+len(n.Key))
 		// fmt.Printf("\n02\n")
 		if err == nil && didResolve {
@@ -182,13 +182,13 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 			n.flags.gen = t.cachegen
 		}
 		// fmt.Printf("\n04\n")
-		fmt.Printf("\nGot node: %+v\n", newnode)
+		// fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case *fullNode:
 		// fmt.Printf("\nFull Node: %+v\n", n)
-		fmt.Printf("\nDepth: %v", pos)
-		fmt.Printf("\nfullnode key: %+v\n", key[:pos])
-		fmt.Printf("Go: %x\n", key[pos])
+		// fmt.Printf("\nDepth: %v", pos)
+		// fmt.Printf("\nfullnode key: %+v\n", key[:pos])
+		// fmt.Printf("Go: %x\n", key[pos])
 		value, newnode, didResolve, err = t.tryGet(n.Children[key[pos]], key, pos+1)
 		if err == nil && didResolve {
 			// fmt.Printf("\n11\n")
@@ -200,17 +200,17 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 		// fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case hashNode:
-		fmt.Printf("\nDepth: %+v", pos)
-		fmt.Printf("hashnode\n")
+		// fmt.Printf("\nDepth: %+v", pos)
+		// fmt.Printf("hashnode\n")
 		child, err := t.resolveHash(n, key[:pos])
-		fmt.Printf("hashchild: %+v\n", child)
+		// fmt.Printf("hashchild: %+v\n", child)
 		// fmt.Printf("\n21\n")
 		if err != nil {
 			// fmt.Printf("\n22\n")
 			return nil, n, true, err
 		}
 		// fmt.Printf("\n23\n")
-		fmt.Printf("tryget: key=%+v\nfrom node=%+v", key, child)
+		// fmt.Printf("tryget: key=%+v\nfrom node=%+v", key, child)
 		value, newnode, _, err := t.tryGet(child, key, pos)
 		// fmt.Printf("\n24\n")
 		return value, newnode, true, err

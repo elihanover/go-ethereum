@@ -321,6 +321,20 @@ func TestReplication(t *testing.T) {
 	fmt.Printf("done\n")
 	fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
 
+	// print out db
+	db1 := trie.db.Nodes()
+	db2 := trie2.db.Nodes()
+	fmt.Printf("DB1:\n")
+	for _, node := range db1 {
+		n, _ := trie.db.Node(node)
+		fmt.Printf("%+v\n", n)
+	}
+	fmt.Printf("DB2:\n")
+	for _, node := range db2 {
+		n, _ := trie2.db.Node(node)
+		fmt.Printf("%+v\n", n)
+	}
+
 	// print out KV pairs
 	// it1 := NewIterator(trie.NodeIterator(nil))
 	// found := make(map[string]string)

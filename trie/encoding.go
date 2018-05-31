@@ -61,7 +61,16 @@ func binToCompact(bin []byte) []byte {
 	}
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5 // terminator flag byte.
-	if (len(bin)/4)&1 == 1 { // if odd
+	odd := (len(bin)/4&1) == 1 // before padding, check if len is odd
+	if (len(bin)%4) != 0 {
+		// if len(bin) not divisible by 4, pad the ending with 0's,
+		// and tell first 2 bits of prefix how much we padded
+		padding := 4 - len(bin)%4
+		for i := 0; i < padding; i++ {
+			append(bin, 0x0)
+		}
+	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0
+	if odd { // if odd
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
 		buf[0] |= bin[1] << 2// but what if we only have one bit?
