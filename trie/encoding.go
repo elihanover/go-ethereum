@@ -67,7 +67,7 @@ func binToCompact(bin []byte) []byte {
 		// and tell first 2 bits of prefix how much we padded
 		padding := 4 - len(bin)%4
 		for i := 0; i < padding; i++ {
-			append(bin, 0x0)
+			bin = append(bin, 0x0)
 		}
 	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0
 	if odd { // if odd
@@ -98,15 +98,16 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
-	prefix := base[0] << 3 | base[1] << 2 | base[2] << 1 | base[3]
 	base = base[:len(base)-1] // take off terminator bit
 	// apply terminator flag
-	if prefix >= 2 {
+	if base[2] != 0 {
 		base = append(base, 2) // terminator
 	}
 	// apply odd flag
-	chop := 4 * (2 - prefix&1)
-	return base[chop:]
+	chop := 4 * (2 - base[3])
+	// check for end padding
+	pad := int(base[0] + base[1])
+	return base[chop:len(base)-pad]
 }
 
 // original
