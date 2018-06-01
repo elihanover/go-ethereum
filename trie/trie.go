@@ -134,9 +134,7 @@ func (t *Trie) Get(key []byte) []byte {
 // The value bytes must not be modified by the caller.
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryGet(key []byte) ([]byte, error) {
-	fmt.Printf("\nTryGet: %s\n", string(key))
 	key = keybytesToBin(key)
-	fmt.Printf("\nGet from trie: %+v\n", t.root)
 	value, newroot, didResolve, err := t.tryGet(t.root, key, 0)
 	if err == nil && didResolve {
 		t.root = newroot
@@ -167,7 +165,6 @@ func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode
 		// fmt.Printf("\nshortnode: %+v\n", n)
 		// fmt.Printf("\nshortnode key: %+v\n", n.Key)
 		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
-			fmt.Printf("\n01\n")
 			// key not found in trie
 			return nil, n, false, nil
 		}
@@ -241,7 +238,9 @@ func (t *Trie) Update(key, value []byte) {
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryUpdate(key, value []byte) error {
 	k := keybytesToBin(key)
+	fmt.Printf("keybytes: %x\n to bin: %+v\n", key, k)
 	if len(value) != 0 {
+		fmt.Printf("Insert:\nKey: %s\nValue: %s\n", string(key), string(value))
 		_, n, err := t.insert(t.root, nil, k, valueNode(value))
 		if err != nil {
 			return err
@@ -274,6 +273,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			if !dirty || err != nil {
 				return false, n, err
 			}
+			fmt.Printf("Inserted as shortnode: %+v\n\n", n.Key)
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.
@@ -293,6 +293,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			return true, branch, nil
 		}
 		// Otherwise, replace it with a short node leading up to the branch.
+		fmt.Printf("Inserted as extension: %+v\n\n", key[:matchlen])
 		return true, &shortNode{key[:matchlen], branch, t.newFlag()}, nil
 
 	case *fullNode:

@@ -133,7 +133,7 @@ func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
 	if len(buf) == 0 {
 		return nil, io.ErrUnexpectedEOF
 	}
-	fmt.Printf("Decode: %x\n", buf)
+	// fmt.Printf("Decode: %x\n", buf)
 	elems, _, err := rlp.SplitList(buf)
 	if err != nil {
 		return nil, fmt.Errorf("decode error: %v", err)
@@ -161,9 +161,9 @@ func decodeShort(hash, elems []byte, cachegen uint16) (node, error) {
 		return nil, err
 	}
 	flag := nodeFlag{hash: hash, gen: cachegen}
-	fmt.Printf("kbuf: %x", kbuf)
+	// fmt.Printf("kbuf: %x", kbuf)
 	key := compactToBin(kbuf) // key returned is wrong, missing pieces on the end
-	fmt.Printf("\nshortnode bin key: %+v\n", key)
+	// fmt.Printf("\nshortnode bin key: %+v\n", key)
 	if hasTerm(key) {
 		// fmt.Printf("\nLEAFNODE\n")
 		// value node
@@ -205,7 +205,7 @@ const hashLen = len(common.Hash{})
 
 func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	kind, val, rest, err := rlp.Split(buf)
-	// fmt.Printf("\nkind: %x\nval: %x\nrest: %x\n", kind, val, rest)
+	// fmt.Printf("\nkind: %s\nval: %+v\nrest: %+v\n", kind, val, rest)
 	if err != nil {
 		// fmt.Println("T0")
 		return nil, buf, err

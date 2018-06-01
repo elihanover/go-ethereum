@@ -315,43 +315,27 @@ func TestReplication(t *testing.T) {
 	///////////////
 
 	// compare roots
-	trie.Decode(trie.root, 0)
-	fmt.Printf("t2\n")
-	trie2.Decode(trie2.root, 0)
-	fmt.Printf("done\n")
-	fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
+	// trie.Decode(trie.root, 0)
+	// fmt.Printf("t2\n")
+	// trie2.Decode(trie2.root, 0)
+	// fmt.Printf("done\n")
+	// fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
 
-	// print out db
-	db1 := trie.db.Nodes()
-	db2 := trie2.db.Nodes()
-	fmt.Printf("DB1:\n")
-	for _, node := range db1 {
-		n, _ := trie.db.Node(node)
-		fmt.Printf("%+v\n", n)
-	}
-	fmt.Printf("DB2:\n")
-	for _, node := range db2 {
-		n, _ := trie2.db.Node(node)
-		fmt.Printf("%+v\n", n)
-	}
 
 	// print out KV pairs
-	// it1 := NewIterator(trie.NodeIterator(nil))
-	// found := make(map[string]string)
-	// for it1.Next() { // NEVER GET INTO HERE
-	// 	fmt.Printf("it1.key: %x, it1.Value: %x\n", it1.Key, it1.Value)
-	// 	found[string(it1.Key)] = string(it1.Value)
-	// }
-	// it2 := NewIterator(trie2.NodeIterator(nil))
-	// found2 := make(map[string]string)
-	// for it2.Next() { // NEVER GET INTO HERE
-	// 	fmt.Printf("it2.key: %x, it2.Value: %x\n", it2.Key, it2.Value)
-	// 	found2[string(it2.Key)] = string(it2.Value)
-	// }
+	it1 := NewIterator(trie.NodeIterator(nil))
+	found := make(map[string]string)
+	for it1.Next() { // NEVER GET INTO HERE
+		fmt.Printf("it1.key: %x, it1.Value: %x\n", it1.Key, it1.Value)
+		found[string(it1.Key)] = string(it1.Value)
+	}
+	it2 := NewIterator(trie2.NodeIterator(nil))
+	found2 := make(map[string]string)
+	for it2.Next() { // NEVER GET INTO HERE
+		fmt.Printf("it2.key: %x, it2.Value: %x\n", it2.Key, it2.Value)
+		found2[string(it2.Key)] = string(it2.Value)
+	}
 
-	// now check direct access using these keys
-	fmt.Printf("do1: %s\n", string(getString(trie, "do")))
-	fmt.Printf("do2: %s\n", string(getString(trie2, "do")))
 
 	// check db.Nodes: all there, but in different order each time, so order probably doesn't matter
 	//fmt.Printf("triedb: %+v\n", trie.db.Nodes())
@@ -361,39 +345,39 @@ func TestReplication(t *testing.T) {
 	//
 
 
-	// for _, kv := range vals {
-	// 	// if string(getString(trie, kv.k)) != string(getString(trie2, kv.k)) {
-	// 	if string(getString(trie2, kv.k)) != kv.v {
-	// 		//t.Errorf("trie2 doesn't have %q => %q", kv.k, kv.v)
-	// 		t.Errorf("trie has %q => %q\nwhen trie2 has %q => %q", kv.k, string(getString(trie, kv.k)), kv.k, string(getString(trie2, kv.k)))
-	// 	}
-	// }
-	// hash, err := trie2.Commit(nil)
-	// if err != nil {
-	// 	t.Fatalf("commit error: %v", err)
-	// }
-	// if hash != exp {
-	// 	t.Errorf("root failure. expected %x got %x", exp, hash)
-	// }
-	//
-	// // perform some insertions on the new trie.
-	// vals2 := []struct{ k, v string }{
-	// 	{"do", "verb"},
-	// 	{"ether", "wookiedoo"},
-	// 	{"horse", "stallion"},
-	// 	// {"shaman", "horse"},
-	// 	// {"doge", "coin"},
-	// 	// {"ether", ""},
-	// 	// {"dog", "puppy"},
-	// 	// {"somethingveryoddindeedthis is", "myothernodedata"},
-	// 	// {"shaman", ""},
-	// }
-	// for _, val := range vals2 {
-	// 	updateString(trie2, val.k, val.v)
-	// }
-	// if hash := trie2.Hash(); hash != exp {
-	// 	t.Errorf("root failure. expected %x got %x", exp, hash)
-	// }
+	for _, kv := range vals {
+		// if string(getString(trie, kv.k)) != string(getString(trie2, kv.k)) {
+		if string(getString(trie2, kv.k)) != kv.v {
+			//t.Errorf("trie2 doesn't have %q => %q", kv.k, kv.v)
+			t.Errorf("trie has %q => %q\nwhen trie2 has %q => %q", kv.k, string(getString(trie, kv.k)), kv.k, string(getString(trie2, kv.k)))
+		}
+	}
+	hash, err := trie2.Commit(nil)
+	if err != nil {
+		t.Fatalf("commit error: %v", err)
+	}
+	if hash != exp {
+		t.Errorf("root failure. expected %x got %x", exp, hash)
+	}
+
+	// perform some insertions on the new trie.
+	vals2 := []struct{ k, v string }{
+		{"do", "verb"},
+		{"ether", "wookiedoo"},
+		{"horse", "stallion"},
+		// {"shaman", "horse"},
+		// {"doge", "coin"},
+		// {"ether", ""},
+		// {"dog", "puppy"},
+		// {"somethingveryoddindeedthis is", "myothernodedata"},
+		// {"shaman", ""},
+	}
+	for _, val := range vals2 {
+		updateString(trie2, val.k, val.v)
+	}
+	if hash := trie2.Hash(); hash != exp {
+		t.Errorf("root failure. expected %x got %x", exp, hash)
+	}
 }
 
 func TestLargeValue(t *testing.T) {

@@ -16,6 +16,8 @@
 
 package trie
 
+import "fmt"
+
 // Trie keys are dealt with in three distinct encodings:
 //
 // KEYBYTES encoding contains the actual key and nothing else. This encoding is the
@@ -98,16 +100,20 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
+ 	// fmt.Printf("base: %+v\n", base)
 	base = base[:len(base)-1] // take off terminator bit
-	// apply terminator flag
-	if base[2] != 0 {
-		base = append(base, 2) // terminator
-	}
 	// apply odd flag
-	chop := 4 * (2 - base[3])
+	chop := 4 * (2 - int(base[3]))
+	// check for terminator
+	terminator := base[2] != 0
 	// check for end padding
 	pad := int(base[0] + base[1])
-	return base[chop:len(base)-pad]
+	base = base[chop:len(base)-pad]
+	// apply terminator flag
+	if terminator {
+		base = append(base, 2) // terminator
+	}
+	return base
 }
 
 // original
@@ -136,7 +142,6 @@ func keybytesToBin(str []byte) []byte {
 	return bits
 }
 
-//ORIGINAL
 // hexToKeybytes turns hex nibbles into key bytes.
 // This can only be used for keys of even length.
 func hexToKeybytes(hex []byte) []byte {
@@ -151,10 +156,10 @@ func hexToKeybytes(hex []byte) []byte {
 	return key
 }
 
-// MODIFIED
 // binToKeybytes turns binary encoded bytes into key bytes.
 // This can only be used for keys of even length.
 func binToKeybytes(bin []byte) []byte {
+	fmt.Printf("bin2kyb: %+v\n", bin)
 	if hasTerm(bin) { // does this have terminator flag?
 		bin = bin[:len(bin)-1] // if so, drop it
 	}
