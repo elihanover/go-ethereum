@@ -54,24 +54,25 @@ func hexToCompact(hex []byte) []byte {
 	return buf
 }
 
-// Modified
 func binToCompact(bin []byte) []byte {
 	terminator := byte(0)
 	if hasTerm(bin) {
 		terminator = 1
-		bin = bin[:len(bin)-1]
+		bin = bin[:len(bin)-1] // take off terminator
 	}
-	buf := make([]byte, len(bin)/8+1)
-	buf[0] = terminator << 5 // terminator flag byte.
-	odd := (len(bin)/4&1) == 1 // before padding, check if len is odd
+	// if len(bin) not divisible by 4, pad the ending with 0's,
+	// and tell first 2 bits of prefix how much we padded
+	padding := (4 - len(bin) % 4) % 4
+	// add padding
 	if (len(bin)%4) != 0 {
-		// if len(bin) not divisible by 4, pad the ending with 0's,
-		// and tell first 2 bits of prefix how much we padded
-		padding := 4 - len(bin)%4
 		for i := 0; i < padding; i++ {
 			bin = append(bin, 0x0)
 		}
 	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0
+	buf := make([]byte, len(bin)/8+1)
+	buf[0] = terminator << 5
+	buf[0] = byte(padding) << 6
+	odd := (len(bin)/4&1) == 1
 	if odd { // if odd
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
@@ -80,6 +81,7 @@ func binToCompact(bin []byte) []byte {
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
+	fmt.Printf("buf[0] 2: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
 	return buf
 }
@@ -157,7 +159,7 @@ func hexToKeybytes(hex []byte) []byte {
 }
 
 // binToKeybytes turns binary encoded bytes into key bytes.
-// This can only be used for keys of even length.
+// This can only be used for keys of length % 8 == 0.
 func binToKeybytes(bin []byte) []byte {
 	fmt.Printf("bin2kyb: %+v\n", bin)
 	if hasTerm(bin) { // does this have terminator flag?
@@ -173,6 +175,8 @@ func binToKeybytes(bin []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) []byte {
+	fmt.Printf("decode: %+v\n", bits)
+	fmt.Printf("into %d bytes\n", len(bytes))
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)

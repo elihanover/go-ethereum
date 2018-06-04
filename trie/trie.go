@@ -265,6 +265,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
+		fmt.Printf("key: %x\n", key)
+		fmt.Printf("n.Key: %x\n", n.Key)
 		matchlen := prefixLen(key, n.Key)
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
@@ -273,7 +275,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			if !dirty || err != nil {
 				return false, n, err
 			}
-			fmt.Printf("Inserted as shortnode: %+v\n\n", n.Key)
+			fmt.Printf("Inserted as shortnode: %+v\n", n.Key)
+			fmt.Printf("Val: %s\n\n", nn)
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.

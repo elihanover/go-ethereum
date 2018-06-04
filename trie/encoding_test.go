@@ -67,10 +67,14 @@ func TestBinCompact(t *testing.T) {
             bin: []byte{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2 /*term*/},
             compact: []byte{0x20, 0x0f, 0x1c, 0xb8},
         },
+				{
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+					compact: []byte{0x56, 0xca},
+				},
     }
     for _, test := range tests {
 				fmt.Printf("compact: %+v\n", test.compact)
-				fmt.Printf("compact: %+v\n", test.compact)
+				fmt.Printf("bin: %+v\n", test.bin)
         if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
             t.Errorf("binToCompact(%x) -> %x, want %x", test.bin, c, test.compact)
         }

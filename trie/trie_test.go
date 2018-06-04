@@ -190,7 +190,7 @@ func TestInsert(t *testing.T) {
 	trie = newEmpty()
 	updateString(trie, "A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	updateString(trie, "B", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
-	updateString(trie, "C", "yabadabadoo")
+	updateString(trie, "C", "yabadabadooo")
 	deleteString(trie, "B")
 	deleteString(trie, "C")
 
@@ -199,6 +199,8 @@ func TestInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
+	fmt.Printf("insert root: %+v\n", trie.root)
+	fmt.Printf("insert root: %+v\n", root)
 	if root != exp {
 		t.Errorf("exp %x got %x", exp, root)
 	} else {
@@ -296,8 +298,10 @@ func TestReplication(t *testing.T) {
 	for _, val := range vals {
 		updateString(trie, val.k, val.v)
 	}
+	fmt.Printf("after: %+v\n", trie.root) // good here, problem not insert
 	fmt.Printf("test2")
 	exp, err := trie.Commit(nil)
+	fmt.Printf("commit: %+v\n", trie.root)
 	fmt.Printf("test3")
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
@@ -315,9 +319,10 @@ func TestReplication(t *testing.T) {
 	///////////////
 
 	// compare roots
-	// trie.Decode(trie.root, 0)
+	fmt.Printf("%+v", trie.root)
+	trie.Decode(trie.root, 0)
 	// fmt.Printf("t2\n")
-	// trie2.Decode(trie2.root, 0)
+	trie2.Decode(trie2.root, 0)
 	// fmt.Printf("done\n")
 	// fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
 
@@ -329,6 +334,7 @@ func TestReplication(t *testing.T) {
 		fmt.Printf("it1.key: %x, it1.Value: %x\n", it1.Key, it1.Value)
 		found[string(it1.Key)] = string(it1.Value)
 	}
+	fmt.Println("done")
 	it2 := NewIterator(trie2.NodeIterator(nil))
 	found2 := make(map[string]string)
 	for it2.Next() { // NEVER GET INTO HERE
@@ -679,6 +685,7 @@ func getString(trie *Trie, k string) []byte {
 
 func updateString(trie *Trie, k, v string) {
 	trie.Update([]byte(k), []byte(v))
+	fmt.Printf("updated to: %+v\n", trie.root)
 }
 
 func deleteString(trie *Trie, k string) {
