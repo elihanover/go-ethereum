@@ -71,7 +71,7 @@ func binToCompact(bin []byte) []byte {
 	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
-	buf[0] = byte(padding) << 6
+	buf[0] |= byte(padding) << 6
 	odd := (len(bin)/4&1) == 1
 	if odd { // if odd
 		buf[0] |= 1 << 4 // odd flag
