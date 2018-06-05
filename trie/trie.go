@@ -109,7 +109,7 @@ func New(root common.Hash, db *Database) (*Trie, error) {
 			return nil, err
 		}
 		trie.root = rootnode
-		fmt.Printf("trie.root: %+v\n", trie.root)
+		// fmt.Printf("trie.root: %+v\n", trie.root)
 	}
 	return trie, nil
 }
@@ -238,9 +238,9 @@ func (t *Trie) Update(key, value []byte) {
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryUpdate(key, value []byte) error {
 	k := keybytesToBin(key)
-	fmt.Printf("keybytes: %x\n to bin: %+v\n", key, k)
+	// fmt.Printf("keybytes: %x\n to bin: %+v\n", key, k)
 	if len(value) != 0 {
-		fmt.Printf("Insert:\nKey: %s\nValue: %s\n", string(key), string(value))
+		// fmt.Printf("Insert:\nKey: %s\nValue: %s\n", string(key), string(value))
 		_, n, err := t.insert(t.root, nil, k, valueNode(value))
 		if err != nil {
 			return err
@@ -265,8 +265,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
-		fmt.Printf("key: %x\n", key)
-		fmt.Printf("n.Key: %x\n", n.Key)
+		// fmt.Printf("key: %x\n", key)
+		// fmt.Printf("n.Key: %x\n", n.Key)
 		matchlen := prefixLen(key, n.Key)
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
@@ -275,8 +275,8 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			if !dirty || err != nil {
 				return false, n, err
 			}
-			fmt.Printf("Inserted as shortnode: %+v\n", n.Key)
-			fmt.Printf("Val: %s\n\n", nn)
+			// fmt.Printf("Inserted as shortnode: %+v\n", n.Key)
+			// fmt.Printf("Val: %s\n\n", nn)
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.
@@ -296,7 +296,7 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			return true, branch, nil
 		}
 		// Otherwise, replace it with a short node leading up to the branch.
-		fmt.Printf("Inserted as extension: %+v\n\n", key[:matchlen])
+		// fmt.Printf("Inserted as extension: %+v\n\n", key[:matchlen])
 		return true, &shortNode{key[:matchlen], branch, t.newFlag()}, nil
 
 	case *fullNode:

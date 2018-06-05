@@ -152,12 +152,11 @@ func testMissingNode(t *testing.T, memonly bool) {
 		t.Errorf("Wrong error: %v", err)
 	}
 	trie, _ = New(root, triedb)
-	fmt.Printf("111111")
-	for k, v := range triedb.nodes {
-		fmt.Printf("k: %x\n", k)
-		fmt.Printf("v: " + string(v.blob) + "\n")
-	}
-	fmt.Printf("222222")
+
+	// for k, v := range triedb.nodes {
+		// fmt.Printf("k: %x\n", k)
+		// fmt.Printf("v: " + string(v.blob) + "\n")
+	// }
 	_, err = trie.TryGet([]byte("123456"))
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
@@ -199,13 +198,14 @@ func TestInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
-	fmt.Printf("insert root: %+v\n", trie.root)
-	fmt.Printf("insert root: %+v\n", root)
+	// fmt.Printf("insert root: %+v\n", trie.root)
+	// fmt.Printf("insert root: %+v\n", root)
 	if root != exp {
 		t.Errorf("exp %x got %x", exp, root)
-	} else {
-		t.Errorf("\n\n\nWorked\n\n\n")
 	}
+	// else {
+	// 	t.Errorf("\n\n\nWorked\n\n\n")
+	// }
 }
 
 func TestGet(t *testing.T) {
@@ -284,7 +284,7 @@ func TestEmptyValues(t *testing.T) {
 }
 
 func TestReplication(t *testing.T) {
-	fmt.Printf("\n\nSTARTREP\n\n")
+	// fmt.Printf("\n\nSTARTREP\n\n")
 	trie := newEmpty()
 	vals := []struct{ k, v string }{
 		{"do", "verb"},
@@ -298,17 +298,17 @@ func TestReplication(t *testing.T) {
 	for _, val := range vals {
 		updateString(trie, val.k, val.v)
 	}
-	fmt.Printf("after: %+v\n", trie.root) // good here, problem not insert
-	fmt.Printf("test2")
+	// fmt.Printf("after: %+v\n", trie.root) // good here, problem not insert
+	// fmt.Printf("test2")
 	exp, err := trie.Commit(nil)
-	fmt.Printf("commit: %+v\n", trie.root)
-	fmt.Printf("test3")
+	// fmt.Printf("commit: %+v\n", trie.root)
+	// fmt.Printf("test3")
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
 
 	// create a new trie on top of the database and check that lookups work.
-	fmt.Printf("\n\nnew guy\n\n")
+	// fmt.Printf("\n\nnew guy\n\n")
 	trie2, err := New(exp, trie.db)
 	if err != nil {
 		t.Fatalf("can't recreate trie at %x: %v", exp, err)
@@ -319,10 +319,10 @@ func TestReplication(t *testing.T) {
 	///////////////
 
 	// compare roots
-	fmt.Printf("%+v", trie.root)
-	trie.Decode(trie.root, 0)
+	// fmt.Printf("%+v", trie.root)
+	// trie.Decode(trie.root, 0)
 	// fmt.Printf("t2\n")
-	trie2.Decode(trie2.root, 0)
+	// trie2.Decode(trie2.root, 0)
 	// fmt.Printf("done\n")
 	// fmt.Printf("\ntrie2 root: %+v\n\n", trie2.root)
 
@@ -331,17 +331,16 @@ func TestReplication(t *testing.T) {
 	it1 := NewIterator(trie.NodeIterator(nil))
 	found := make(map[string]string)
 	for it1.Next() { // NEVER GET INTO HERE
-		fmt.Printf("it1.key: %s, it1.Value: %s\n", it1.Key, it1.Value)
+		// fmt.Printf("it1.key: %s, it1.Value: %s\n", it1.Key, it1.Value)
 		found[string(it1.Key)] = string(it1.Value)
 	}
-	fmt.Println("done")
+	// fmt.Println("done")
 	it2 := NewIterator(trie2.NodeIterator(nil))
 	found2 := make(map[string]string)
 	for it2.Next() {
-		fmt.Printf("it2.key: %s, it2.Value: %s\n", it2.Key, it2.Value)
+		// fmt.Printf("it2.key: %s, it2.Value: %s\n", it2.Key, it2.Value)
 		found2[string(it2.Key)] = string(it2.Value)
 	}
-
 
 	// check db.Nodes: all there, but in different order each time, so order probably doesn't matter
 	//fmt.Printf("triedb: %+v\n", trie.db.Nodes())
@@ -685,7 +684,7 @@ func getString(trie *Trie, k string) []byte {
 
 func updateString(trie *Trie, k, v string) {
 	trie.Update([]byte(k), []byte(v))
-	fmt.Printf("updated to: %+v\n", trie.root)
+	// fmt.Printf("updated to: %+v\n", trie.root)
 }
 
 func deleteString(trie *Trie, k string) {

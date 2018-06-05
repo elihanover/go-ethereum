@@ -17,7 +17,7 @@
 package trie
 
 import (
-	"fmt"
+	// "fmt"
 
 	"bytes"
 	"testing"
@@ -115,16 +115,16 @@ func TestBinCompact(t *testing.T) {
 				},
     }
     for _, test := range tests {
-				fmt.Printf("compact: %x\n", test.compact)
-				fmt.Printf("bin: %+v\n", test.bin)
+				// fmt.Printf("compact: %x\n", test.compact)
+				// fmt.Printf("bin: %+v\n", test.bin)
         if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
             t.Errorf("binToCompact(%+v) -> %x, want %x", test.bin, c, test.compact)
         }
-				fmt.Printf("bin2: %+v\n", test.bin) // test.bin changed by here
+				// fmt.Printf("bin2: %+v\n", test.bin) // test.bin changed by here
         if h := compactToBin(test.compact); !bytes.Equal(h, test.bin) {
          		t.Errorf("compactToBin(%x) -> %+v, want %+v", test.compact, h, test.bin)
         }
-				fmt.Printf("bin3: %+v\n", test.bin)
+				// fmt.Printf("bin3: %+v\n", test.bin)
     }
 }
 

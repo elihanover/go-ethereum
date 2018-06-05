@@ -16,7 +16,7 @@
 
 package trie
 
-import "fmt"
+// import "fmt"
 
 // Trie keys are dealt with in three distinct encodings:
 //
@@ -74,10 +74,10 @@ func binToCompact(b []byte) []byte {
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
-	fmt.Printf("len bin: %d\n", len(bin))
+	// fmt.Printf("len bin: %d\n", len(bin))
 	odd := (len(bin)/4&1) == 1
 	if odd { // if odd
-		fmt.Println("is odd")
+		// fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
 		buf[0] |= bin[1] << 2// but what if we only have one bit?
@@ -85,9 +85,9 @@ func binToCompact(b []byte) []byte {
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
-	fmt.Printf("buf[0] 2: %x\n", buf[0])
+	// fmt.Printf("buf[0] 2: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
-	fmt.Printf("binside: %+v\n", bin)
+	// fmt.Printf("binside: %+v\n", bin)
 	return buf
 }
 
@@ -107,7 +107,7 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
- 	fmt.Printf("base: %+v\n", base)
+ 	// fmt.Printf("base: %+v\n", base)
 	base = base[:len(base)-1] // take off terminator bit
 	// apply odd flag
 	chop := 4 * (2 - int(base[3]))
@@ -115,15 +115,14 @@ func compactToBin(compact []byte) []byte {
 	terminator := base[2] != 0
 	// check for end padding
 	pad := int((base[0] << 1) + base[1])
-	fmt.Printf("pad: %d\n", pad)
+	// fmt.Printf("pad: %d\n", pad)
 	base = base[chop:len(base)-pad]
-	fmt.Printf("base before terminator stuff: %+v\n", base)
+	// fmt.Printf("base before terminator stuff: %+v\n", base)
 	// apply terminator flag
 	if terminator {
-		fmt.Println("INSIDE TERMINATOR STUFF")
 		base = append(base, 2) // terminator
 	}
-	fmt.Printf("base: %+v\n", base)
+	// fmt.Printf("base: %+v\n", base)
 	return base
 }
 
@@ -170,7 +169,7 @@ func hexToKeybytes(hex []byte) []byte {
 // binToKeybytes turns binary encoded bytes into key bytes.
 // This can only be used for keys of length % 8 == 0.
 func binToKeybytes(bin []byte) []byte {
-	fmt.Printf("bin2kyb: %+v\n", bin)
+	// fmt.Printf("bin2kyb: %+v\n", bin)
 	if hasTerm(bin) { // does this have terminator flag?
 		bin = bin[:len(bin)-1] // if so, drop it
 	}
@@ -184,8 +183,8 @@ func binToKeybytes(bin []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) []byte {
-	fmt.Printf("decode: %+v\n", bits)
-	fmt.Printf("into %d bytes\n", len(bytes))
+	// fmt.Printf("decode: %+v\n", bits)
+	// fmt.Printf("into %d bytes\n", len(bytes))
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)
