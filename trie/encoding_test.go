@@ -71,17 +71,31 @@ func TestBinCompact(t *testing.T) {
 					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1},
 					compact: []byte{0x56, 0xca},
 				},
+				{
+					bin: []byte{0, 1, 1},
+					compact: []byte{0x56},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 2},
+					compact: []byte{0x20, 0x64, 0x6f, 0x67, 0x65},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 1},
+					compact: []byte{0xc0, 0x68},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 1, 2},
+					compact: []byte{0xe0, 0x68},
+				},
     }
     for _, test := range tests {
 				fmt.Printf("compact: %+v\n", test.compact)
 				fmt.Printf("bin: %+v\n", test.bin)
         if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
-            t.Errorf("binToCompact(%x) -> %x, want %x", test.bin, c, test.compact)
+            t.Errorf("binToCompact(%+v) -> %x, want %x", test.bin, c, test.compact)
         }
-				fmt.Printf("compact: %+v\n", test.compact)
-				fmt.Printf("compact: %+v\n", test.compact)
         if h := compactToBin(test.compact); !bytes.Equal(h, test.bin) {
-         		t.Errorf("compactToBin(%x) -> %x, want %x", test.compact, h, test.bin)
+         		t.Errorf("compactToBin(%x) -> %+v, want %+v", test.compact, h, test.bin)
         }
     }
 }

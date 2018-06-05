@@ -72,8 +72,10 @@ func binToCompact(bin []byte) []byte {
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
+	fmt.Printf("len bin: %d\n", len(bin))
 	odd := (len(bin)/4&1) == 1
 	if odd { // if odd
+		fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
 		buf[0] |= bin[1] << 2// but what if we only have one bit?
@@ -102,14 +104,15 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
- 	// fmt.Printf("base: %+v\n", base)
+ 	fmt.Printf("base: %+v\n", base)
 	base = base[:len(base)-1] // take off terminator bit
 	// apply odd flag
 	chop := 4 * (2 - int(base[3]))
 	// check for terminator
 	terminator := base[2] != 0
 	// check for end padding
-	pad := int(base[0] + base[1])
+	pad := int((base[0] << 1) + base[1])
+	fmt.Printf("pad: %d\n", pad)
 	base = base[chop:len(base)-pad]
 	// apply terminator flag
 	if terminator {

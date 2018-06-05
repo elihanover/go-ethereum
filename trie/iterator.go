@@ -45,7 +45,7 @@ func NewIterator(it NodeIterator) *Iterator {
 // Next moves the iterator forward one key-value entry.
 func (it *Iterator) Next() bool {
 	for it.nodeIt.Next(true) {
-		fmt.Printf("at: %+v\n", it.nodeIt.Path())
+		fmt.Printf("at:      %+v\n", it.nodeIt.Path())
 		if it.nodeIt.Leaf() {
 			it.Key = it.nodeIt.LeafKey()
 			it.Value = it.nodeIt.LeafBlob()
