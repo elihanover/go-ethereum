@@ -120,11 +120,7 @@ func compactToBin(compact []byte) []byte {
 		fmt.Println("INSIDE TERMINATOR STUFF")
 		base = append(base, 2) // terminator
 	}
-<<<<<<< HEAD
 	fmt.Printf("base: %+v\n", base)
-=======
-	fmt.Printf("base after terminator stuff: %+v\n", base)
->>>>>>> e15cd798e177db87fb53ec27f39e0f33ff396884
 	return base
 }
 
