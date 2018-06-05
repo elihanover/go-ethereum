@@ -28,7 +28,6 @@ import (
 
 func TestIterator(t *testing.T) {
 	trie := newEmpty()
-	fmt.Printf("root0: %x", trie.Root())
 	vals := []struct{ k, v string }{
 		{"do", "verb"}, // need to make key binkey
 		{"ether", "wookiedoo"},
@@ -41,20 +40,15 @@ func TestIterator(t *testing.T) {
 	all := make(map[string]string)
 	for _, val := range vals {
 		all[val.k] = val.v
-		fmt.Printf("Put %x\n at %x\n", val.v, keybytesToBin([]byte(val.k)))
 		trie.Update([]byte(val.k), []byte(val.v))
 	}
 	trie.Commit(nil)
-	fmt.Printf("root2: %x", trie.Root())
 
 	found := make(map[string]string)
 	it := NewIterator(trie.NodeIterator(nil)) // MUST BE PROBLEM
-	fmt.Printf("hi")
-	for it.Next() { // NEVER GET INTO HERE
-		fmt.Printf("it.key: %x, it.Value: %x", it.Key, it.Value)
+	for it.Next() {
 		found[string(it.Key)] = string(it.Value)
 	}
-	fmt.Printf("bye")
 
 	for k, v := range all {
 		if found[k] != v {
@@ -393,7 +387,10 @@ func testIteratorContinueAfterSeekError(t *testing.T, memonly bool) {
 	if !memonly {
 		triedb.Commit(root, true)
 	}
-	barNodeHash := common.HexToHash("05041990364eb72fcb1127652ce40d8bab765f2bfe53225b1170d276cc101c2e")
+	for _, node := range triedb.nodes {
+		fmt.Printf("%x\n", node)
+	}
+	barNodeHash := common.HexToHash("e482c060a074ddd51a0de980185b73b614109c45673c79257bfc3d419b694f5fa1a95dc23b")
 	var (
 		barNodeBlob []byte
 		barNodeObj  *cachedNode
