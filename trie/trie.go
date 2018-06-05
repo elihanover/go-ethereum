@@ -492,9 +492,7 @@ func (t *Trie) resolveHash(n hashNode, prefix []byte) (node, error) {
 		return nil, &MissingNodeError{NodeHash: hash, Path: prefix}
 	}
 
-	// return mustDecodeNode(n, enc, t.cachegen), nil // potential prob 2: mustDecodeNode is a spicy, spicy cunt, indeed
-	node := mustDecodeNode(n, enc, t.cachegen)
-	return node, nil
+	return mustDecodeNode(n, enc, t.cachegen), nil
 }
 
 // Root returns the root hash of the trie.

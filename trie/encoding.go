@@ -118,6 +118,7 @@ func compactToBin(compact []byte) []byte {
 	if terminator {
 		base = append(base, 2) // terminator
 	}
+	fmt.Printf("base: %+v\n", base)
 	return base
 }
 

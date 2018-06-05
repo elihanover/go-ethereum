@@ -129,26 +129,25 @@ func mustDecodeNode(hash, buf []byte, cachegen uint16) node {
 
 // decodeNode parses the RLP encoding of a trie node.
 func decodeNode(hash, buf []byte, cachegen uint16) (node, error) {
-	// fmt.Printf("\nDecode node: %+v\n", hash)
 	if len(buf) == 0 {
 		return nil, io.ErrUnexpectedEOF
 	}
-	// fmt.Printf("Decode: %x\n", buf)
 	elems, _, err := rlp.SplitList(buf)
 	if err != nil {
+		fmt.Println("Error in splitlist")
 		return nil, fmt.Errorf("decode error: %v", err)
 	}
 	switch c, _ := rlp.CountValues(elems); c {
 	case 2:
-		// fmt.Printf("Node is short\n")
+		fmt.Printf("Node is short\n")
 		n, err := decodeShort(hash, elems, cachegen)
 		return n, wrapError(err, "short")
 	case 3:
-		// fmt.Printf("Node is full\n\n")
+		fmt.Printf("Node is full\n")
 		n, err := decodeFull(hash, elems, cachegen)
 		return n, wrapError(err, "full")
 	default:
-		// fmt.Printf("CASE4")
+		fmt.Printf("CASE4")
 		return nil, fmt.Errorf("invalid number of list elements: %v", c)
 	}
 }
@@ -205,7 +204,7 @@ const hashLen = len(common.Hash{})
 
 func decodeRef(buf []byte, cachegen uint16) (node, []byte, error) {
 	kind, val, rest, err := rlp.Split(buf)
-	// fmt.Printf("\nkind: %s\nval: %+v\nrest: %+v\n", kind, val, rest)
+	fmt.Printf("\nkind: %s\nval: %+v\nrest: %+v\n", kind, val, rest)
 	if err != nil {
 		// fmt.Println("T0")
 		return nil, buf, err

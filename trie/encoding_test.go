@@ -87,16 +87,48 @@ func TestBinCompact(t *testing.T) {
 					bin: []byte{0, 1, 1, 0, 1, 2},
 					compact: []byte{0xe0, 0x68},
 				},
+				{
+					// needs 1 bit of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+					compact: []byte{0x56, 0xca},
+				},
+				{
+					// needs 1 bit of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 2},
+					compact: []byte{0x76, 0xca},
+				},
+				{
+					// needs 2 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0},
+					compact: []byte{0x96, 0xc8},
+				},
+				{
+					// needs 2 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 2},
+					compact: []byte{0xb6, 0xc8},
+				},
+				{
+					// needs 3 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0},
+					compact: []byte{0xd6, 0xc0},
+				},
+				{
+					// needs 3 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0, 2},
+					compact: []byte{0xf6, 0xc0},
+				},
     }
     for _, test := range tests {
-				fmt.Printf("compact: %+v\n", test.compact)
+				fmt.Printf("compact: %x\n", test.compact)
 				fmt.Printf("bin: %+v\n", test.bin)
         if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
             t.Errorf("binToCompact(%+v) -> %x, want %x", test.bin, c, test.compact)
         }
+				fmt.Printf("bin2: %+v\n", test.bin) // test.bin changed by here
         if h := compactToBin(test.compact); !bytes.Equal(h, test.bin) {
          		t.Errorf("compactToBin(%x) -> %+v, want %+v", test.compact, h, test.bin)
         }
+				fmt.Printf("bin3: %+v\n", test.bin)
     }
 }
 

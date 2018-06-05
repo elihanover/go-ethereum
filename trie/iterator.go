@@ -49,9 +49,10 @@ func (it *Iterator) Next() bool {
 		if it.nodeIt.Leaf() {
 			it.Key = it.nodeIt.LeafKey()
 			it.Value = it.nodeIt.LeafBlob()
+			fmt.Printf("Leaf key: %s\nLeaf value: %s\n", it.Key, it.Value)
 			return true
 		}
-		fmt.Printf("not leaf\n")
+		fmt.Printf("not leaf: %+v\n", it.nodeIt.Path())
 	}
 	it.Key = nil
 	it.Value = nil
