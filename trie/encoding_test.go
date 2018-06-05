@@ -68,10 +68,36 @@ func TestBinCompact(t *testing.T) {
             compact: []byte{0x20, 0x0f, 0x1c, 0xb8},
         },
 				{
+					// needs 1 bit of padding, no terminator
 					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1},
 					compact: []byte{0x56, 0xca},
 				},
 				{
+<<<<<<< HEAD
+					// needs 1 bit of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 2},
+					compact: []byte{0x76, 0xca},
+				},
+				{
+					// needs 2 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0},
+					compact: []byte{0x96, 0xc8},
+				},
+				{
+					// needs 2 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 2},
+					compact: []byte{0xb6, 0xc8},
+				},
+				{
+					// needs 3 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0},
+					compact: []byte{0xd6, 0xc0},
+				},
+				{
+					// needs 3 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0, 2},
+					compact: []byte{0xf6, 0xc0},
+=======
 					bin: []byte{0, 1, 1},
 					compact: []byte{0x56},
 				},
@@ -86,6 +112,7 @@ func TestBinCompact(t *testing.T) {
 				{
 					bin: []byte{0, 1, 1, 0, 1, 2},
 					compact: []byte{0xe0, 0x68},
+>>>>>>> d2086d8f2b1f50e4f8fa372e700b26a9f693c121
 				},
 				{
 					// needs 1 bit of padding, no terminator

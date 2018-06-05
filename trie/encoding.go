@@ -100,7 +100,7 @@ func compactToHex(compact []byte) []byte {
 	chop := 2 - base[0]&1
 	return base[chop:]
 }
-
+fmt.Printf("compact: %+v\n", compact)
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
@@ -114,11 +114,17 @@ func compactToBin(compact []byte) []byte {
 	pad := int((base[0] << 1) + base[1])
 	fmt.Printf("pad: %d\n", pad)
 	base = base[chop:len(base)-pad]
+	fmt.Printf("base before terminator stuff: %+v\n", base)
 	// apply terminator flag
 	if terminator {
+		fmt.Println("INSIDE TERMINATOR STUFF")
 		base = append(base, 2) // terminator
 	}
+<<<<<<< HEAD
 	fmt.Printf("base: %+v\n", base)
+=======
+	fmt.Printf("base after terminator stuff: %+v\n", base)
+>>>>>>> e15cd798e177db87fb53ec27f39e0f33ff396884
 	return base
 }
 
