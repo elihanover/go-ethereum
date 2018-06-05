@@ -118,31 +118,15 @@ func testMissingNode(t *testing.T, memonly bool) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	// goes and deletes ______ nodes out of TRIEDB
-	// hash := common.HexToHash("0xe1d943cc8f061a0c0b98162830b970395ac9315654824bf21b73b891365262f9")
-	hash := common.HexToHash("0x61eaf90780498bb0d4055777c5df4367f875f3cbf50949f85261515311a6b73a")
+	hash := common.HexToHash("fcdaa826f1fcd5547c851f2bb8ac901d2a49dd2be9cfa3a0041d4b0de1665c37")
 	if memonly {
-		// fmt.Println("111111")
-		// fmt.Printf("predelete:\n")
-		// for k, v := range triedb.nodes {
-		// 	fmt.Printf("k: %x\n", k)
-		// 	fmt.Printf("v: " + string(v.blob) + "\n")
-		// }
-		delete(triedb.nodes, hash) // WHAT IS THIS DELETE??
-		// fmt.Printf("pstdelete: %+v\n", triedb.nodes)
-		// for k, v := range triedb.nodes {
-		// 	fmt.Printf("k: %x\n", k)
-		// 	fmt.Printf("v: " + string(v.blob) + "\n")
-		// }
+		delete(triedb.nodes, hash)
 	} else {
-		// fmt.Println("222222")
-		diskdb.Delete(hash[:]) // ethdb.Delete(), follow functions called
+		diskdb.Delete(hash[:])
 	}
 
 	trie, _ = New(root, triedb)
-	// fmt.Printf("\n\nSTART tryGet\n\n")
 	_, err = trie.TryGet([]byte("120000"))
-	// fmt.Printf("\n\nEND tryGet\n\n")
 	if _, ok := err.(*MissingNodeError); !ok {
 		t.Errorf("Wrong error: %v", err)
 	}
@@ -179,11 +163,17 @@ func TestInsert(t *testing.T) {
 	updateString(trie, "doe", "reindeer")
 	updateString(trie, "dog", "puppy")
 	updateString(trie, "dogglesworth", "cat")
+	hash := trie.Hash()
+	updateString(trie, "doe", "")
+	updateString(trie, "dog", "")
+	updateString(trie, "dogglesworth", "")
+	updateString(trie, "doe", "reindeer")
+	updateString(trie, "dog", "puppy")
+	updateString(trie, "dogglesworth", "cat")
+	hash2 := trie.Hash()
 
-	exp := common.HexToHash("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3") // this is for hex encoded trie
-	root := trie.Hash()
-	if root != exp {
-		t.Errorf("exp %x got %x", exp, root)
+	if hash != hash2 {
+		t.Errorf("exp %x got %x", hash, hash2)
 	}
 
 	trie = newEmpty()
@@ -193,19 +183,14 @@ func TestInsert(t *testing.T) {
 	deleteString(trie, "B")
 	deleteString(trie, "C")
 
-	exp = common.HexToHash("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab")
+	exp := common.HexToHash("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab")
 	root, err := trie.Commit(nil)
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
-	// fmt.Printf("insert root: %+v\n", trie.root)
-	// fmt.Printf("insert root: %+v\n", root)
 	if root != exp {
 		t.Errorf("exp %x got %x", exp, root)
 	}
-	// else {
-	// 	t.Errorf("\n\n\nWorked\n\n\n")
-	// }
 }
 
 func TestGet(t *testing.T) {
@@ -252,16 +237,26 @@ func TestDelete(t *testing.T) {
 		}
 	}
 
+	trie2 := newEmpty()
+	vals2 := []struct{ k, v string }{
+		{"do", "verb"},
+		{"horse", "stallion"},
+		{"doge", "coin"},
+		{"dog", "puppy"},
+	}
+	for _, val := range vals2 {
+		updateString(trie2, val.k, val.v)
+	}
+
 	hash := trie.Hash()
-	exp := common.HexToHash("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84")
-	if hash != exp {
-		t.Errorf("expected %x got %x", exp, hash)
+	hash2 := trie2.Hash()
+	if hash != hash2 {
+		t.Errorf("expected %x got %x", hash2, hash)
 	}
 }
 
 func TestEmptyValues(t *testing.T) {
 	trie := newEmpty()
-
 	vals := []struct{ k, v string }{
 		{"do", "verb"},
 		{"ether", "wookiedoo"},
@@ -276,10 +271,21 @@ func TestEmptyValues(t *testing.T) {
 		updateString(trie, val.k, val.v)
 	}
 
+	trie2 := newEmpty()
+	vals2 := []struct{ k, v string }{
+		{"do", "verb"},
+		{"horse", "stallion"},
+		{"doge", "coin"},
+		{"dog", "puppy"},
+	}
+	for _, val := range vals2 {
+		updateString(trie2, val.k, val.v)
+	}
+
 	hash := trie.Hash()
-	exp := common.HexToHash("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84")
-	if hash != exp {
-		t.Errorf("expected %x got %x", exp, hash)
+	hash2 := trie2.Hash()
+	if hash != hash2 {
+		t.Errorf("expected %x got %x", hash2, hash)
 	}
 }
 
