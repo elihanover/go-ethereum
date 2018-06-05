@@ -111,7 +111,8 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 		// Hash the short node's child, caching the newly hashed subtree
 		collapsed, cached := n.copy(), n.copy()
 		fmt.Printf("n.Key bin: %+v\n", n.Key)
-		collapsed.Key = binToCompact(n.Key)
+		collapsed.Key = binToCompact(n.Key) // this is where shit must go wrong
+		fmt.Printf("n.Key bin: %+v\n", n.Key)
 		fmt.Printf("compact key: %s\n", collapsed.Key)
 		cached.Key = common.CopyBytes(n.Key)
 

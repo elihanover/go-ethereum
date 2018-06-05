@@ -39,9 +39,9 @@ import "fmt"
 // Original
 func hexToCompact(hex []byte) []byte {
 	terminator := byte(0)
-	if hasTerm(hex) { // IF THIS IS A LEAF
+	if hasTerm(hex) {
 		terminator = 1
-		hex = hex[:len(hex)-1] // GET RID OF TERMINATOR, WHY DID WE NEED IT IN MEMORY?
+		hex = hex[:len(hex)-1]
 	}
 	buf := make([]byte, len(hex)/2+1)
 	buf[0] = terminator << 5 // the flag byte
@@ -54,7 +54,9 @@ func hexToCompact(hex []byte) []byte {
 	return buf
 }
 
-func binToCompact(bin []byte) []byte {
+func binToCompact(b []byte) []byte {
+	bin := make([]byte, len(b))
+	copy(bin, b)
 	terminator := byte(0)
 	if hasTerm(bin) {
 		terminator = 1
@@ -85,6 +87,7 @@ func binToCompact(bin []byte) []byte {
 	}
 	fmt.Printf("buf[0] 2: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
+	fmt.Printf("binside: %+v\n", bin)
 	return buf
 }
 
@@ -100,7 +103,7 @@ func compactToHex(compact []byte) []byte {
 	chop := 2 - base[0]&1
 	return base[chop:]
 }
-fmt.Printf("compact: %+v\n", compact)
+
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
