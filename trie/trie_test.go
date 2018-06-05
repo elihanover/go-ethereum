@@ -337,7 +337,7 @@ func TestReplication(t *testing.T) {
 	fmt.Println("done")
 	it2 := NewIterator(trie2.NodeIterator(nil))
 	found2 := make(map[string]string)
-	for it2.Next() { // NEVER GET INTO HERE
+	for it2.Next() {
 		fmt.Printf("it2.key: %x, it2.Value: %x\n", it2.Key, it2.Value)
 		found2[string(it2.Key)] = string(it2.Value)
 	}
