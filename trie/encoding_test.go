@@ -164,6 +164,34 @@ func TestBinKeybytes(t *testing.T) {
 	}
 }
 
+func BenchmarkBinToCompact(b *testing.B) {
+	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
+	for i := 0; i < b.N; i++ {
+		binToCompact(testBytes)
+	}
+}
+
+func BenchmarkCompactToBin(b *testing.B) {
+	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
+	for i := 0; i < b.N; i++ {
+		compactToBin(testBytes)
+	}
+}
+
+func BenchmarkKeybytesToBin(b *testing.B) {
+	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
+	for i := 0; i < b.N; i++ {
+		keybytesToBin(testBytes)
+	}
+}
+
+func BenchmarkBinToKeybytes(b *testing.B) {
+	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 2}
+	for i := 0; i < b.N; i++ {
+		binToKeybytes(testBytes)
+	}
+}
+
 func BenchmarkHexToCompact(b *testing.B) {
 	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
 	for i := 0; i < b.N; i++ {
@@ -186,7 +214,7 @@ func BenchmarkKeybytesToHex(b *testing.B) {
 }
 
 func BenchmarkHexToKeybytes(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
+	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 2}
 	for i := 0; i < b.N; i++ {
 		hexToKeybytes(testBytes)
 	}
