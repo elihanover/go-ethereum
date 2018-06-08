@@ -1,6 +1,6 @@
 # Baylands Geth Research Playground
 ## BinTrie Implementation
-###Notes:
+### Notes
 In this implementation, we changed the radix of the state trie to 2 from 16. In
 order to do this, we also needed to change the hex-prefix encoding.
 
