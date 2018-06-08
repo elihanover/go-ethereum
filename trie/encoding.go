@@ -91,23 +91,23 @@ func binToCompactOG(b []byte) []byte {
 }
 
 func binToCompact(b []byte) []byte {
+	terminator := byte(0)
+	if hasTerm(b) {
+		terminator = 1
+		b = b[:len(b)-1] // take off terminator
+	}
 	// if len(bin) not divisible by 4, pad the ending with 0's,
 	// and tell first 2 bits of prefix how much we padded.
 	padding := (4 - len(b) % 4) % 4
 	bin := make([]byte, len(b)+padding)
 	copy(bin, b)
-	terminator := byte(0)
-	if hasTerm(b) {
-		terminator = 1
-		bin = bin[:len(bin)-(padding+1)] // take off terminator
-	}
 	// doesn't work for len(bin) < 4 and len(bin) % 4 != 0
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
 	// fmt.Printf("len bin: %d\n", len(bin))
-	odd := (len(bin)/4&1) == 1
-	if odd { // if odd
+	// odd := (len(bin)/4&1) == 1
+	if (len(bin)/4&1) == 1 { // if odd
 		// fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
