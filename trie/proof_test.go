@@ -99,8 +99,93 @@ func mutateByte(b []byte) {
 	}
 }
 
-func BenchmarkProve(b *testing.B) {
+func BenchmarkProve100(b *testing.B) {
 	trie, vals := randomTrie(100)
+	var keys []string
+	for k := range vals {
+		keys = append(keys, k)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kv := vals[keys[i%len(keys)]]
+		proofs := ethdb.NewMemDatabase()
+		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			b.Fatalf("zero length proof for %x", kv.k)
+		}
+	}
+}
+
+func BenchmarkProve1000(b *testing.B) {
+	trie, vals := randomTrie(1000)
+	var keys []string
+	for k := range vals {
+		keys = append(keys, k)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kv := vals[keys[i%len(keys)]]
+		proofs := ethdb.NewMemDatabase()
+		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			b.Fatalf("zero length proof for %x", kv.k)
+		}
+	}
+}
+
+func BenchmarkProve10000(b *testing.B) {
+	trie, vals := randomTrie(10000)
+	var keys []string
+	for k := range vals {
+		keys = append(keys, k)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kv := vals[keys[i%len(keys)]]
+		proofs := ethdb.NewMemDatabase()
+		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			b.Fatalf("zero length proof for %x", kv.k)
+		}
+	}
+}
+
+func BenchmarkProve100000(b *testing.B) {
+	trie, vals := randomTrie(100000)
+	var keys []string
+	for k := range vals {
+		keys = append(keys, k)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kv := vals[keys[i%len(keys)]]
+		proofs := ethdb.NewMemDatabase()
+		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			b.Fatalf("zero length proof for %x", kv.k)
+		}
+	}
+}
+
+func BenchmarkProve1000000(b *testing.B) {
+	trie, vals := randomTrie(1000000)
+	var keys []string
+	for k := range vals {
+		keys = append(keys, k)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		kv := vals[keys[i%len(keys)]]
+		proofs := ethdb.NewMemDatabase()
+		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			b.Fatalf("zero length proof for %x", kv.k)
+		}
+	}
+}
+
+func BenchmarkProve10000000(b *testing.B) {
+	trie, vals := randomTrie(10000000)
 	var keys []string
 	for k := range vals {
 		keys = append(keys, k)
