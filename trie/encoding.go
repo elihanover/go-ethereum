@@ -54,7 +54,7 @@ func hexToCompact(hex []byte) []byte {
 	return buf
 }
 
-func binToCompact(b []byte) []byte {
+func binToCompactOG(b []byte) []byte {
 	bin := make([]byte, len(b))
 	copy(bin, b)
 	terminator := byte(0)
@@ -70,7 +70,38 @@ func binToCompact(b []byte) []byte {
 		for i := 0; i < padding; i++ {
 			bin = append(bin, 0x0)
 		}
-	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0
+	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0 ????
+	buf := make([]byte, len(bin)/8+1)
+	buf[0] = terminator << 5
+	buf[0] |= byte(padding) << 6
+	odd := (len(bin)/4&1) == 1
+	if odd { // if odd
+		// fmt.Println("is odd")
+		buf[0] |= 1 << 4 // odd flag
+		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
+		buf[0] |= bin[1] << 2// but what if we only have one bit?
+		buf[0] |= bin[2] << 1
+		buf[0] |= bin[3]
+		bin = bin[4:]
+	}
+	// fmt.Printf("buf[0] 2: %x\n", buf[0])
+	decodeBits(bin, buf[1:])
+	// fmt.Printf("binside: %+v\n", bin)
+	return buf
+}
+
+func binToCompact(b []byte) []byte {
+	// if len(bin) not divisible by 4, pad the ending with 0's,
+	// and tell first 2 bits of prefix how much we padded.
+	padding := (4 - len(b) % 4) % 4
+	bin := make([]byte, len(b)+padding)
+	copy(bin, b)
+	terminator := byte(0)
+	if hasTerm(b) {
+		terminator = 1
+		bin = bin[:len(bin)-(padding+1)] // take off terminator
+	}
+	// doesn't work for len(bin) < 4 and len(bin) % 4 != 0
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6

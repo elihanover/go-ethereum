@@ -191,31 +191,3 @@ func BenchmarkBinToKeybytes(b *testing.B) {
 		binToKeybytes(testBytes)
 	}
 }
-
-func BenchmarkHexToCompact(b *testing.B) {
-	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-	for i := 0; i < b.N; i++ {
-		hexToCompact(testBytes)
-	}
-}
-
-func BenchmarkCompactToHex(b *testing.B) {
-	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-	for i := 0; i < b.N; i++ {
-		compactToHex(testBytes)
-	}
-}
-
-func BenchmarkKeybytesToHex(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
-	for i := 0; i < b.N; i++ {
-		keybytesToHex(testBytes)
-	}
-}
-
-func BenchmarkHexToKeybytes(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 2}
-	for i := 0; i < b.N; i++ {
-		hexToKeybytes(testBytes)
-	}
-}
