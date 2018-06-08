@@ -171,7 +171,7 @@ func keybytesToHex(str []byte) []byte {
 
 
 // modified
-func keybytesToBin(str []byte) []byte {
+func keybytesToBinOG(str []byte) []byte {
 	l := len(str) * 8 + 1
 	var bits = make([]byte, l)
 	for i, b := range str {
@@ -182,6 +182,24 @@ func keybytesToBin(str []byte) []byte {
 	bits[l-1] = 2 // set terminator bit
 	return bits
 }
+
+func keybytesToBin(str []byte) []byte {
+	l := len(str) * 8 + 1
+	var bits = make([]byte, l)
+	for i, b := range str {
+		bits[8*i] = (b >> uint(7)) & 0x1
+		bits[8*i+1] = (b >> uint(6)) & 0x1
+		bits[8*i+2] = (b >> uint(5)) & 0x1
+		bits[8*i+3] = (b >> uint(4)) & 0x1
+		bits[8*i+4] = (b >> uint(3)) & 0x1
+		bits[8*i+5] = (b >> uint(2)) & 0x1
+		bits[8*i+6] = (b >> uint(1)) & 0x1
+		bits[8*i+7] = (b >> uint(0)) & 0x1
+	}
+	bits[l-1] = 2 // set terminator bit
+	return bits
+}
+
 
 // hexToKeybytes turns hex nibbles into key bytes.
 // This can only be used for keys of even length.
@@ -213,13 +231,31 @@ func binToKeybytes(bin []byte) []byte {
 }
 
 // decodeBits into one slice of bytes.
-func decodeBits(bits []byte, bytes []byte) []byte {
+func decodeBitsOG(bits []byte, bytes []byte) []byte {
 	// fmt.Printf("decode: %+v\n", bits)
 	// fmt.Printf("into %d bytes\n", len(bytes))
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)
 		}
+	}
+	return bytes
+}
+
+// decodeBits into one slice of bytes.
+func decodeBits(bits []byte, bytes []byte) []byte {
+	// fmt.Printf("decode: %+v\n", bits)
+	// fmt.Printf("into %d bytes\n", len(bytes))
+	for by := 0; by < len(bytes); by++ {
+		// decode next 8 bits per byte
+		bytes[by] |= bits[8*by+7]
+		bytes[by] |= bits[8*by+6] << uint(1)
+		bytes[by] |= bits[8*by+5] << uint(2)
+		bytes[by] |= bits[8*by+4] << uint(3)
+		bytes[by] |= bits[8*by+3] << uint(4)
+		bytes[by] |= bits[8*by+2] << uint(5)
+		bytes[by] |= bits[8*by+1] << uint(6)
+		bytes[by] |= bits[8*by] << uint(7)
 	}
 	return bytes
 }
