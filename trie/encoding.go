@@ -16,7 +16,7 @@
 
 package trie
 
-// import "fmt"
+import "fmt"
 
 // Trie keys are dealt with in three distinct encodings:
 //
@@ -90,22 +90,21 @@ func binToCompactOG(b []byte) []byte {
 	return buf
 }
 
-func binToCompact(b []byte) []byte {
+func binToCompact(bin []byte) []byte {
 	terminator := byte(0)
-	if hasTerm(b) {
+	if hasTerm(bin) {
 		terminator = 1
-		b = b[:len(b)-1] // take off terminator
+		bin = bin[:len(bin)-1] // take off terminator
 	}
 	// if len(bin) not divisible by 4, pad the ending with 0's,
 	// and tell first 2 bits of prefix how much we padded.
-	padding := (4 - len(b) % 4) % 4
-	bin := make([]byte, len(b)+padding)
-	copy(bin, b)
+	padding := (4 - len(bin) % 4) % 4
+	// bin := make([]byte, len(b)+padding)
+	// copy(bin, b)
 	// doesn't work for len(bin) < 4 and len(bin) % 4 != 0
-	buf := make([]byte, len(bin)/8+1)
+	buf := make([]byte, (len(bin)+padding)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
-	// fmt.Printf("len bin: %d\n", len(bin))
 	// odd := (len(bin)/4&1) == 1
 	if (len(bin)/4&1) == 1 { // if odd
 		// fmt.Println("is odd")
@@ -116,9 +115,8 @@ func binToCompact(b []byte) []byte {
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
-	// fmt.Printf("buf[0] 2: %x\n", buf[0])
+	fmt.Printf("prebuf: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
-	// fmt.Printf("binside: %+v\n", bin)
 	return buf
 }
 
@@ -187,14 +185,14 @@ func keybytesToBin(str []byte) []byte {
 	l := len(str) * 8 + 1
 	var bits = make([]byte, l)
 	for i, b := range str {
-		bits[8*i] = (b >> uint(7)) & 0x1
-		bits[8*i+1] = (b >> uint(6)) & 0x1
-		bits[8*i+2] = (b >> uint(5)) & 0x1
-		bits[8*i+3] = (b >> uint(4)) & 0x1
-		bits[8*i+4] = (b >> uint(3)) & 0x1
-		bits[8*i+5] = (b >> uint(2)) & 0x1
-		bits[8*i+6] = (b >> uint(1)) & 0x1
-		bits[8*i+7] = (b >> uint(0)) & 0x1
+		bits[8*i] = (b >> 7) & 0x1
+		bits[8*i+1] = (b >> 6) & 0x1
+		bits[8*i+2] = (b >> 5) & 0x1
+		bits[8*i+3] = (b >> 4) & 0x1
+		bits[8*i+4] = (b >> 3) & 0x1
+		bits[8*i+5] = (b >> 2) & 0x1
+		bits[8*i+6] = (b >> 1) & 0x1
+		bits[8*i+7] = (b >> 0) & 0x1
 	}
 	bits[l-1] = 2 // set terminator bit
 	return bits
@@ -243,22 +241,61 @@ func decodeBitsOG(bits []byte, bytes []byte) []byte {
 }
 
 // decodeBits into one slice of bytes.
-func decodeBits(bits []byte, bytes []byte) []byte {
-	// fmt.Printf("decode: %+v\n", bits)
-	// fmt.Printf("into %d bytes\n", len(bytes))
+func decodeBitsBest(bits []byte, bytes []byte) []byte {
 	for by := 0; by < len(bytes); by++ {
-		// decode next 8 bits per byte
+		bytes[by] |= bits[8*by] << 7
+		bytes[by] |= bits[8*by+1] << 6
+		bytes[by] |= bits[8*by+2] << 5
+		bytes[by] |= bits[8*by+3] << 4
+		bytes[by] |= bits[8*by+4] << 3
+		bytes[by] |= bits[8*by+5] << 2
+		bytes[by] |= bits[8*by+6] << 1
 		bytes[by] |= bits[8*by+7]
-		bytes[by] |= bits[8*by+6] << uint(1)
-		bytes[by] |= bits[8*by+5] << uint(2)
-		bytes[by] |= bits[8*by+4] << uint(3)
-		bytes[by] |= bits[8*by+3] << uint(4)
-		bytes[by] |= bits[8*by+2] << uint(5)
-		bytes[by] |= bits[8*by+1] << uint(6)
-		bytes[by] |= bits[8*by] << uint(7)
 	}
 	return bytes
 }
+
+
+// decodeBits into one slice of bytes.
+func decodeBits(bits []byte, bytes []byte) []byte {
+	fmt.Printf("bits: %+v\n", bits)
+	fmt.Printf("bytes: %+v\n", bytes)
+	tail := (4 - len(bits) % 4) + 4
+	nbytes := len(bytes)
+	for by := 0; by < nbytes-1; by++ {
+		bytes[by] |= bits[8*by] << 7
+		bytes[by] |= bits[8*by+1] << 6
+		bytes[by] |= bits[8*by+2] << 5
+		bytes[by] |= bits[8*by+3] << 4
+		bytes[by] |= bits[8*by+4] << 3
+		bytes[by] |= bits[8*by+5] << 2
+		bytes[by] |= bits[8*by+6] << 1
+		bytes[by] |= bits[8*by+7]
+	}
+	if nbytes > 0 {
+		bytes[nbytes-1] |= bits[8*(nbytes-1)] << 7
+		bytes[nbytes-1] |= bits[8*(nbytes-1)+1] << 6
+		bytes[nbytes-1] |= bits[8*(nbytes-1)+2] << 5
+		bytes[nbytes-1] |= bits[8*(nbytes-1)+3] << 4
+		for bt := 4; bt < tail; bt++ {
+			bytes[nbytes-1] |= bits[8*(nbytes-1)+bt] << uint(7-bt)
+		}
+	}
+	fmt.Printf("postbytes: %x\n", bytes)
+	return bytes
+}
+
+// decodeBits into one slice of bytes.
+// func decodeBits2(bits []byte, bytes []byte) []byte {
+// 	fmt.Printf("bits: %+v\n", bits)
+// 	fmt.Printf("bytes: %+v\n", bytes)
+// 	tail := len(bits) % 4 + 4
+// 	nbytes := len(bytes)
+// 	for bt := 0; bt < len(bits)-padding; bt += 4 {
+// 		bytes[bt/8] |= bits[8*by] << 7
+// 	}
+// 	return bytes
+// }
 
 func testDecodeBits(bits []byte) []byte {
 	bytes := make([]byte, len(bits)/8)
