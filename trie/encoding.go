@@ -99,22 +99,30 @@ func binToCompact(bin []byte) []byte {
 	// if len(bin) not divisible by 4, pad the ending with 0's,
 	// and tell first 2 bits of prefix how much we padded.
 	padding := (4 - len(bin) % 4) % 4
-	// bin := make([]byte, len(b)+padding)
-	// copy(bin, b)
-	// doesn't work for len(bin) < 4 and len(bin) % 4 != 0
+
 	buf := make([]byte, (len(bin)+padding)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
 	odd := ((len(bin)+padding)/4&1) == 1
 	if odd { // if odd
-		// fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
+
+		if len(bin) < 4 {
+			for i := 0; i < (4-padding); i++ {
+				buf[0] |= bin[i] << uint(3-i)
+			}
+			return buf
+		}
+
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
-		buf[0] |= bin[1] << 2// but what if we only have one bit?
+		buf[0] |= bin[1] << 2 // but what if we only have one bit?
 		buf[0] |= bin[2] << 1
 		buf[0] |= bin[3]
+
+		// doesn't work for len(bin) < 4 and len(bin) % 4 != 0=
 		bin = bin[4:]
 	}
+
 	decodeBits(bin, buf[1:])
 	return buf
 }
@@ -257,7 +265,10 @@ func decodeBitsBest(bits []byte, bytes []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) []byte {
-	tail := (4 - len(bits) % 4) + 4
+	// fmt.Printf("bits: %+v\n", bits)
+	// fmt.Printf("n bytes: %d\n", len(bytes))
+	tail := 8 - (4-len(bits)%4)%4
+	// fmt.Printf("tail: %d\n", tail)
 	nbytes := len(bytes)
 	for by := 0; by < nbytes-1; by++ {
 		bytes[by] |= bits[8*by] << 7
