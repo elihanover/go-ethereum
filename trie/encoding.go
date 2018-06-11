@@ -16,7 +16,7 @@
 
 package trie
 
-import "fmt"
+// import "fmt"
 
 // Trie keys are dealt with in three distinct encodings:
 //
@@ -105,8 +105,8 @@ func binToCompact(bin []byte) []byte {
 	buf := make([]byte, (len(bin)+padding)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
-	// odd := (len(bin)/4&1) == 1
-	if (len(bin)/4&1) == 1 { // if odd
+	odd := ((len(bin)+padding)/4&1) == 1
+	if odd { // if odd
 		// fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
@@ -115,7 +115,6 @@ func binToCompact(bin []byte) []byte {
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
-	fmt.Printf("prebuf: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
 	return buf
 }
@@ -258,8 +257,6 @@ func decodeBitsBest(bits []byte, bytes []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) []byte {
-	fmt.Printf("bits: %+v\n", bits)
-	fmt.Printf("bytes: %+v\n", bytes)
 	tail := (4 - len(bits) % 4) + 4
 	nbytes := len(bytes)
 	for by := 0; by < nbytes-1; by++ {
@@ -281,7 +278,6 @@ func decodeBits(bits []byte, bytes []byte) []byte {
 			bytes[nbytes-1] |= bits[8*(nbytes-1)+bt] << uint(7-bt)
 		}
 	}
-	fmt.Printf("postbytes: %x\n", bytes)
 	return bytes
 }
 
