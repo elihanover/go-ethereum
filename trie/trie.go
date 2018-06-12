@@ -565,3 +565,60 @@ func (t *Trie) Decode(rootnode node, spaces int) {
 		fmt.Sprintf("%T: invalid node: %v", rootnode, rootnode)
 	}
 }
+
+// GetNodeTypeDistribution of some trie
+// (full, leaf, extension, value)
+func (t *Trie) GetNodeTypeDistribution(rootnode node) []int {
+	// go and decode hash nodes
+	switch n := (rootnode).(type) {
+	// case nil:
+	// 	return nil, nil, false, nil
+	case valueNode:
+		return []int{0, 0, 0, 0}
+	case *shortNode:
+		dist := t.GetNodeTypeDistribution(n.Val)
+
+		if hasTerm(n.Key) {
+			// leaf node
+			dist[1] += 1
+			return dist
+		}
+
+		// otherwise, must be extension
+		dist[2] += 1
+		return dist
+
+		// for i, v := range []int{0, 0, 0, 1} {
+		// 	if v != dist[i] {
+		// 		// must be extension
+		// 		dist[2] += 1
+		// 		return dist
+		// 	}
+		// }
+		// // otherwise, matches and must be leaf
+		// dist[1] += 1
+		// return dist
+	case *fullNode:
+		dist := []int{1, 0, 0, 0}
+		for _, child := range n.Children {
+			// get childnode from key
+			child_dist := t.GetNodeTypeDistribution(child)
+			dist[0] += child_dist[0]
+			dist[1] += child_dist[1]
+			dist[2] += child_dist[2]
+			dist[3] += child_dist[3]
+		}
+		return dist
+	case hashNode:
+		// decode the hash node
+		child, err := t.resolveHash(n, []byte{})
+		if err != nil {
+			fmt.Sprintf("%T: invalid hashnode: %v", rootnode, rootnode)
+		}
+		return t.GetNodeTypeDistribution(child)
+	default:
+		fmt.Sprintf("%T: invalid node: %v", rootnode, rootnode)
+	}
+	// what to do if here...
+	return []int{0, 0, 0, 0}
+}

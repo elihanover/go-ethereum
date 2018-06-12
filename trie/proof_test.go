@@ -17,6 +17,8 @@
 package trie
 
 import (
+	"fmt"
+
 	"bytes"
 	crand "crypto/rand"
 	mrand "math/rand"
@@ -97,6 +99,12 @@ func mutateByte(b []byte) {
 			break
 		}
 	}
+}
+
+// Get the distribution of nodes in a randomly generated trie
+func BenchmarkNodeDist(b *testing.B) {
+	trie, _ := randomTrie(100)
+	fmt.Printf("distribition: %+v\n", trie.GetNodeTypeDistribution(trie.root))
 }
 
 func BenchmarkProve(b *testing.B) {
