@@ -102,18 +102,52 @@ func mutateByte(b []byte) {
 }
 
 // Get the distribution of nodes in a randomly generated trie
-func BenchmarkNodeDist(b *testing.B) {
+func BenchmarkAll(b *testing.B) {
 	averagedDist := []int{0,0,0,0}
+	averageProofsize := 0
+
 	samples := 100
+	trieSize := 100
+
 	for i := 0; i < samples; i++ {
-		trie, _ := randomTrie(100)
+
+		// generate random trie
+		trie, vals := randomTrie(trieSize)
+
+		// get node type distribution and add to average
 		dist := trie.GetNodeTypeDistribution(trie.root)
 		averagedDist[0] += dist[0]
 		averagedDist[1] += dist[1]
 		averagedDist[2] += dist[2]
 		averagedDist[3] += dist[3]
+
+		// get proof size
+		var keys []string
+		for k := range vals {
+			keys = append(keys, k)
+		}
+
+		// Construct proof and get the size of it
+		// b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			kv := vals[keys[i%len(keys)]]
+			proofs := ethdb.NewMemDatabase()
+			if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+				b.Fatalf("zero length proof for %x", kv.k)
+			}
+
+			averageProofsize += (len(proofs.Keys()))
+		}
 	}
+
+	// report back what we want
+	fmt.Printf("\nFor tree of size %d:\n", samples)
+	averagedDist[0] /= samples
+	averagedDist[1] /= samples
+	averagedDist[2] /= samples
+	averagedDist[3] /= samples
 	fmt.Printf("avedist: %+v\n", averagedDist)
+	fmt.Printf("aveproof: %d\n", averageProofsize/samples)
 }
 //
 // func BenchmarkProve(b *testing.B) {
