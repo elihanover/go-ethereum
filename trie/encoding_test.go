@@ -165,29 +165,37 @@ func TestBinKeybytes(t *testing.T) {
 }
 
 func BenchmarkBinToCompact(b *testing.B) {
-	testBytes := []byte{0, 1, 1, 0, 1, 0, 2 /*term*/}
-	for i := 0; i < b.N; i++ {
-		binToCompact(testBytes)
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 1, 1, 0, 1, 0, 2 /*term*/}
+		for i := 0; i < b.N; i++ {
+			binToCompact(testBytes)
+		}
 	}
 }
 
 func BenchmarkCompactToBin(b *testing.B) {
-	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-	for i := 0; i < b.N; i++ {
-		compactToBin(testBytes)
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
+		for i := 0; i < b.N; i++ {
+			compactToBin(testBytes)
+		}
 	}
 }
 
 func BenchmarkKeybytesToBin(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
-	for i := 0; i < b.N; i++ {
-		keybytesToBin(testBytes)
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
+		for i := 0; i < b.N; i++ {
+			keybytesToBin(testBytes)
+		}
 	}
 }
 
 func BenchmarkBinToKeybytes(b *testing.B) {
-	testBytes := []byte{0, 1, 1, 1, 1, 0, 0, 0, 2}
-	for i := 0; i < b.N; i++ {
-		binToKeybytes(testBytes)
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 1, 1, 1, 1, 0, 0, 0, 2}
+		for i := 0; i < b.N; i++ {
+			binToKeybytes(testBytes)
+		}
 	}
 }
