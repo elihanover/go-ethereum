@@ -103,110 +103,119 @@ func mutateByte(b []byte) {
 
 // Get the distribution of nodes in a randomly generated trie
 func BenchmarkNodeDist(b *testing.B) {
-	trie, _ := randomTrie(100)
-	fmt.Printf("distribition: %+v\n", trie.GetNodeTypeDistribution(trie.root))
+	averagedDist := []int{0,0,0,0}
+	samples := 100
+	for i := 0; i < samples; i++ {
+		trie, _ := randomTrie(100)
+		dist := trie.GetNodeTypeDistribution(trie.root)
+		averagedDist[0] += dist[0]
+		averagedDist[1] += dist[1]
+		averagedDist[2] += dist[2]
+		averagedDist[3] += dist[3]
+	}
+	fmt.Printf("avedist: %+v\n", averagedDist)
 }
-
-func BenchmarkProve(b *testing.B) {
-	trie, vals := randomTrie(100)
-	var keys []string
-	for k := range vals {
-		keys = append(keys, k)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		kv := vals[keys[i%len(keys)]]
-		proofs := ethdb.NewMemDatabase()
-		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
-			b.Fatalf("zero length proof for %x", kv.k)
-		}
-	}
-}
-
-func BenchmarkVerifyProof(b *testing.B) {
-	trie, vals := randomTrie(100)
-	root := trie.Hash()
-	var keys []string
-	var proofs []*ethdb.MemDatabase
-	for k := range vals {
-		keys = append(keys, k)
-		proof := ethdb.NewMemDatabase()
-		trie.Prove([]byte(k), 0, proof)
-		proofs = append(proofs, proof)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		im := i % len(keys)
-		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
-			b.Fatalf("key %x: %v", keys[im], err)
-		}
-	}
-}
-
-func BenchmarkVerifyProof1000(b *testing.B) {
-	trie, vals := randomTrie(1000)
-	root := trie.Hash()
-	var keys []string
-	var proofs []*ethdb.MemDatabase
-	for k := range vals {
-		keys = append(keys, k)
-		proof := ethdb.NewMemDatabase()
-		trie.Prove([]byte(k), 0, proof)
-		proofs = append(proofs, proof)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		im := i % len(keys)
-		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
-			b.Fatalf("key %x: %v", keys[im], err)
-		}
-	}
-}
-
-func BenchmarkVerifyProof10000(b *testing.B) {
-	trie, vals := randomTrie(10000)
-	root := trie.Hash()
-	var keys []string
-	var proofs []*ethdb.MemDatabase
-	for k := range vals {
-		keys = append(keys, k)
-		proof := ethdb.NewMemDatabase()
-		trie.Prove([]byte(k), 0, proof)
-		proofs = append(proofs, proof)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		im := i % len(keys)
-		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
-			b.Fatalf("key %x: %v", keys[im], err)
-		}
-	}
-}
-
-func BenchmarkVerifyProof100000(b *testing.B) {
-	trie, vals := randomTrie(100000)
-	root := trie.Hash()
-	var keys []string
-	var proofs []*ethdb.MemDatabase
-	for k := range vals {
-		keys = append(keys, k)
-		proof := ethdb.NewMemDatabase()
-		trie.Prove([]byte(k), 0, proof)
-		proofs = append(proofs, proof)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		im := i % len(keys)
-		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
-			b.Fatalf("key %x: %v", keys[im], err)
-		}
-	}
-}
+//
+// func BenchmarkProve(b *testing.B) {
+// 	trie, vals := randomTrie(100)
+// 	var keys []string
+// 	for k := range vals {
+// 		keys = append(keys, k)
+// 	}
+//
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		kv := vals[keys[i%len(keys)]]
+// 		proofs := ethdb.NewMemDatabase()
+// 		if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+// 			b.Fatalf("zero length proof for %x", kv.k)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkVerifyProof(b *testing.B) {
+// 	trie, vals := randomTrie(100)
+// 	root := trie.Hash()
+// 	var keys []string
+// 	var proofs []*ethdb.MemDatabase
+// 	for k := range vals {
+// 		keys = append(keys, k)
+// 		proof := ethdb.NewMemDatabase()
+// 		trie.Prove([]byte(k), 0, proof)
+// 		proofs = append(proofs, proof)
+// 	}
+//
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		im := i % len(keys)
+// 		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
+// 			b.Fatalf("key %x: %v", keys[im], err)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkVerifyProof1000(b *testing.B) {
+// 	trie, vals := randomTrie(1000)
+// 	root := trie.Hash()
+// 	var keys []string
+// 	var proofs []*ethdb.MemDatabase
+// 	for k := range vals {
+// 		keys = append(keys, k)
+// 		proof := ethdb.NewMemDatabase()
+// 		trie.Prove([]byte(k), 0, proof)
+// 		proofs = append(proofs, proof)
+// 	}
+//
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		im := i % len(keys)
+// 		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
+// 			b.Fatalf("key %x: %v", keys[im], err)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkVerifyProof10000(b *testing.B) {
+// 	trie, vals := randomTrie(10000)
+// 	root := trie.Hash()
+// 	var keys []string
+// 	var proofs []*ethdb.MemDatabase
+// 	for k := range vals {
+// 		keys = append(keys, k)
+// 		proof := ethdb.NewMemDatabase()
+// 		trie.Prove([]byte(k), 0, proof)
+// 		proofs = append(proofs, proof)
+// 	}
+//
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		im := i % len(keys)
+// 		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
+// 			b.Fatalf("key %x: %v", keys[im], err)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkVerifyProof100000(b *testing.B) {
+// 	trie, vals := randomTrie(100000)
+// 	root := trie.Hash()
+// 	var keys []string
+// 	var proofs []*ethdb.MemDatabase
+// 	for k := range vals {
+// 		keys = append(keys, k)
+// 		proof := ethdb.NewMemDatabase()
+// 		trie.Prove([]byte(k), 0, proof)
+// 		proofs = append(proofs, proof)
+// 	}
+//
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		im := i % len(keys)
+// 		if _, err, _ := VerifyProof(root, []byte(keys[im]), proofs[im]); err != nil {
+// 			b.Fatalf("key %x: %v", keys[im], err)
+// 		}
+// 	}
+// }
 
 func randomTrie(n int) (*Trie, map[string]*kv) {
 	trie := new(Trie)

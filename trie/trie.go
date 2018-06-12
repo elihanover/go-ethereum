@@ -574,7 +574,7 @@ func (t *Trie) GetNodeTypeDistribution(rootnode node) []int {
 	// case nil:
 	// 	return nil, nil, false, nil
 	case valueNode:
-		return []int{0, 0, 0, 0}
+		return []int{0, 0, 0, 1}
 	case *shortNode:
 		dist := t.GetNodeTypeDistribution(n.Val)
 
