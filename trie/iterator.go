@@ -17,6 +17,8 @@
 package trie
 
 import (
+	// "fmt"
+
 	"bytes"
 	"container/heap"
 	"errors"
@@ -43,11 +45,14 @@ func NewIterator(it NodeIterator) *Iterator {
 // Next moves the iterator forward one key-value entry.
 func (it *Iterator) Next() bool {
 	for it.nodeIt.Next(true) {
+		// fmt.Printf("at:      %+v\n", it.nodeIt.Path())
 		if it.nodeIt.Leaf() {
 			it.Key = it.nodeIt.LeafKey()
 			it.Value = it.nodeIt.LeafBlob()
+			// fmt.Printf("Leaf key: %s\nLeaf value: %s\n", it.Key, it.Value)
 			return true
 		}
+		// fmt.Printf("not leaf: %+v\n", it.nodeIt.Path())
 	}
 	it.Key = nil
 	it.Value = nil
@@ -118,6 +123,7 @@ func newNodeIterator(trie *Trie, start []byte) NodeIterator {
 	}
 	it := &nodeIterator{trie: trie}
 	it.err = it.seek(start)
+
 	return it
 }
 
@@ -151,7 +157,8 @@ func (it *nodeIterator) LeafBlob() []byte {
 func (it *nodeIterator) LeafKey() []byte {
 	if len(it.stack) > 0 {
 		if _, ok := it.stack[len(it.stack)-1].node.(valueNode); ok {
-			return hexToKeybytes(it.path)
+			// fmt.Printf("bintokb got: %x\n\n", binToKeybytes(it.path))
+			return binToKeybytes(it.path)
 		}
 	}
 	panic("not at leaf")
@@ -196,7 +203,7 @@ func (it *nodeIterator) Next(descend bool) bool {
 
 func (it *nodeIterator) seek(prefix []byte) error {
 	// The path we're looking for is the hex encoded key without terminator.
-	key := keybytesToHex(prefix)
+	key := keybytesToBin(prefix)
 	key = key[:len(key)-1]
 	// Move forward until we're just before the closest match to key.
 	for {

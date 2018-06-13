@@ -174,6 +174,13 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 	if bc.genesisBlock == nil {
 		return nil, ErrNoGenesis
 	}
+
+	// ELITEST for properties of genesis block
+	// ROOT WORKS HERE, SO WHAT HAPPENS?
+	fmt.Printf("%+v\n\n", bc.genesisBlock)
+	fmt.Printf("%+v\n", bc.genesisBlock.Root())
+	fmt.Printf("%+v\n", bc.genesisBlock.Header().Root)
+
 	if err := bc.loadLastState(); err != nil {
 		return nil, err
 	}
@@ -425,6 +432,9 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 // fast block are left intact.
 func (bc *BlockChain) repair(head **types.Block) error {
 	for {
+		// ELITEST
+		fmt.Printf("repair: %+v\n", ((*head).Root()))
+
 		// Abort if we've rewound to a head block that does have associated state
 		if _, err := state.New((*head).Root(), bc.stateCache); err == nil {
 			log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())

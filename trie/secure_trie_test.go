@@ -28,18 +28,14 @@ import (
 )
 
 func newEmptySecure() *SecureTrie {
-	diskdb, _ := ethdb.NewMemDatabase()
-	triedb := NewDatabase(diskdb)
-
-	trie, _ := NewSecure(common.Hash{}, triedb, 0)
+	trie, _ := NewSecure(common.Hash{}, NewDatabase(ethdb.NewMemDatabase()), 0)
 	return trie
 }
 
 // makeTestSecureTrie creates a large enough secure trie for testing.
 func makeTestSecureTrie() (*Database, *SecureTrie, map[string][]byte) {
 	// Create an empty trie
-	diskdb, _ := ethdb.NewMemDatabase()
-	triedb := NewDatabase(diskdb)
+	triedb := NewDatabase(ethdb.NewMemDatabase())
 
 	trie, _ := NewSecure(common.Hash{}, triedb, 0)
 
@@ -87,10 +83,22 @@ func TestSecureDelete(t *testing.T) {
 			trie.Delete([]byte(val.k))
 		}
 	}
+
+  trie2 := newEmptySecure()
+	vals2 := []struct{ k, v string }{
+		{"do", "verb"},
+		{"horse", "stallion"},
+		{"doge", "coin"},
+		{"dog", "puppy"},
+	}
+  for _, val := range vals2 {
+			trie2.Update([]byte(val.k), []byte(val.v))
+	}
+
 	hash := trie.Hash()
-	exp := common.HexToHash("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d")
-	if hash != exp {
-		t.Errorf("expected %x got %x", exp, hash)
+  hash2 := trie2.Hash()
+	if hash != hash2 {
+		t.Errorf("expected %x got %x", hash2, hash)
 	}
 }
 
