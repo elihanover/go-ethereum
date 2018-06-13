@@ -263,7 +263,7 @@ func (s *TrieSync) children(req *request, object node) ([]*request, error) {
 			depth: req.depth + len(node.Key),
 		}}
 	case *fullNode:
-		for i := 0; i < 17; i++ {
+		for i := 0; i < 3; i++ {
 			if node.Children[i] != nil {
 				children = append(children, child{
 					node:  node.Children[i],

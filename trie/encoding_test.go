@@ -17,88 +17,185 @@
 package trie
 
 import (
+	// "fmt"
+
 	"bytes"
 	"testing"
 )
 
-func TestHexCompact(t *testing.T) {
-	tests := []struct{ hex, compact []byte }{
-		// empty keys, with and without terminator.
-		{hex: []byte{}, compact: []byte{0x00}},
-		{hex: []byte{16}, compact: []byte{0x20}},
-		// odd length, no terminator
-		{hex: []byte{1, 2, 3, 4, 5}, compact: []byte{0x11, 0x23, 0x45}},
-		// even length, no terminator
-		{hex: []byte{0, 1, 2, 3, 4, 5}, compact: []byte{0x00, 0x01, 0x23, 0x45}},
-		// odd length, terminator
-		{hex: []byte{15, 1, 12, 11, 8, 16 /*term*/}, compact: []byte{0x3f, 0x1c, 0xb8}},
-		// even length, terminator
-		{hex: []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}, compact: []byte{0x20, 0x0f, 0x1c, 0xb8}},
+func TestDecodeBits(t *testing.T) {
+	tests := []struct{ bin, bytes []byte}{
+		{bin: []byte{}, bytes: []byte{}}, // empty bin means empty bytes
+		{bin: []byte{1,1,1,1,1,1,1,1}, bytes: []byte{255}},
+		{bin: []byte{0,0,0,0,0,0,0,1}, bytes: []byte{1}},
+		{bin: []byte{1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1}, bytes: []byte{255, 1}},
+		{bin: []byte{1,1,1,1,1,1,1,0}, bytes: []byte{254}},
 	}
 	for _, test := range tests {
-		if c := hexToCompact(test.hex); !bytes.Equal(c, test.compact) {
-			t.Errorf("hexToCompact(%x) -> %x, want %x", test.hex, c, test.compact)
-		}
-		if h := compactToHex(test.compact); !bytes.Equal(h, test.hex) {
-			t.Errorf("compactToHex(%x) -> %x, want %x", test.compact, h, test.hex)
+		if b := testDecodeBits(test.bin); !bytes.Equal(b, test.bytes) {
+			t.Errorf("testDecodeBits(%x) -> %x, want %x", test.bin, b, test.bytes)
 		}
 	}
 }
 
-func TestHexKeybytes(t *testing.T) {
-	tests := []struct{ key, hexIn, hexOut []byte }{
-		{key: []byte{}, hexIn: []byte{16}, hexOut: []byte{16}},
-		{key: []byte{}, hexIn: []byte{}, hexOut: []byte{16}},
+func TestBinCompact(t *testing.T) {
+    tests := []struct{ bin, compact []byte }{
+        // empty keys, with and without terminator.
+        {bin: []byte{}, compact: []byte{0x00}},
+        {bin: []byte{2}, compact: []byte{0x20}},
+        // odd length, no terminator
+        {
+            // hex: []byte{1, 2, 3, 4, 5},
+            bin: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
+            compact: []byte{0x11, 0x23, 0x45},
+        },
+        // even length, no terminator
+        {
+            // hex: []byte{0, 1, 2, 3, 4, 5},
+            bin: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
+            compact: []byte{0x00, 0x01, 0x23, 0x45},
+        },
+        // odd length, terminator
+        {
+            // hex: []byte{15, 1, 12, 11, 8, 16 /*term*/},
+            bin: []byte{1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2 /*term*/},
+            compact: []byte{0x3f, 0x1c, 0xb8},
+        },
+        // even length, terminator
+        {
+            // hex: []byte{0, 15, 1, 12, 11, 8, 16 /*term*/},
+            bin: []byte{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2 /*term*/},
+            compact: []byte{0x20, 0x0f, 0x1c, 0xb8},
+        },
+				{
+					bin: []byte{0, 1, 1},
+					compact: []byte{0x56},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 2},
+					compact: []byte{0x20, 0x64, 0x6f, 0x67, 0x65},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 1},
+					compact: []byte{0xc0, 0x68},
+				},
+				{
+					bin: []byte{0, 1, 1, 0, 1, 2},
+					compact: []byte{0xe0, 0x68},
+				},
+				{
+					// needs 1 bit of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+					compact: []byte{0x56, 0xca},
+				},
+				{
+					// needs 1 bit of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 2},
+					compact: []byte{0x76, 0xca},
+				},
+				{
+					// needs 2 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0},
+					compact: []byte{0x96, 0xc8},
+				},
+				{
+					// needs 2 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 2},
+					compact: []byte{0xb6, 0xc8},
+				},
+				{
+					// needs 3 bits of padding, no terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0},
+					compact: []byte{0xd6, 0xc0},
+				},
+				{
+					// needs 3 bits of padding, with terminator
+					bin: []byte{0, 1, 1, 0, 1, 1, 0, 0, 0, 2},
+					compact: []byte{0xf6, 0xc0},
+				},
+    }
+    for _, test := range tests {
+				// fmt.Printf("compact: %x\n", test.compact)
+				// fmt.Printf("bin: %+v\n", test.bin)
+        if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
+            t.Errorf("binToCompact(%+v) -> %x, want %x", test.bin, c, test.compact)
+        }
+				// fmt.Printf("bin2: %+v\n", test.bin) // test.bin changed by here
+        if h := compactToBin(test.compact); !bytes.Equal(h, test.bin) {
+         		t.Errorf("compactToBin(%x) -> %+v, want %+v", test.compact, h, test.bin)
+        }
+				// fmt.Printf("bin3: %+v\n", test.bin)
+    }
+}
+
+func TestBinKeybytes(t *testing.T) {
+	tests := []struct{ key, binIn, binOut []byte }{
+		{key: []byte{}, binIn: []byte{2}, binOut: []byte{2}}, // ???
+		{key: []byte{}, binIn: []byte{}, binOut: []byte{2}}, // ???
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			hexIn:  []byte{1, 2, 3, 4, 5, 6, 16},
-			hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 5, 6, 16},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
+			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x5},
-			hexIn:  []byte{1, 2, 3, 4, 0, 5, 16},
-			hexOut: []byte{1, 2, 3, 4, 0, 5, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 0, 5, 16},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2},
+			//hexOut: []byte{1, 2, 3, 4, 0, 5, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			hexIn:  []byte{1, 2, 3, 4, 5, 6},
-			hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			//hexIn:  []byte{1, 2, 3, 4, 5, 6},
+			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0},
+			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
+			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
 		},
 	}
 	for _, test := range tests {
-		if h := keybytesToHex(test.key); !bytes.Equal(h, test.hexOut) {
-			t.Errorf("keybytesToHex(%x) -> %x, want %x", test.key, h, test.hexOut)
+		if h := keybytesToBin(test.key); !bytes.Equal(h, test.binOut) {
+			t.Errorf("keybytesToBin(%x) -> %x, want %x", test.key, h, test.binOut)
 		}
-		if k := hexToKeybytes(test.hexIn); !bytes.Equal(k, test.key) {
-			t.Errorf("hexToKeybytes(%x) -> %x, want %x", test.hexIn, k, test.key)
+		if k := binToKeybytes(test.binIn); !bytes.Equal(k, test.key) {
+			t.Errorf("binToKeybytes(%x) -> %x, want %x", test.binIn, k, test.key)
 		}
 	}
 }
 
-func BenchmarkHexToCompact(b *testing.B) {
-	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-	for i := 0; i < b.N; i++ {
-		hexToCompact(testBytes)
+func BenchmarkBinToCompact(b *testing.B) {
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 1, 1, 0, 1, 0, 2 /*term*/}
+		for i := 0; i < b.N; i++ {
+			binToCompact(testBytes)
+		}
 	}
 }
 
-func BenchmarkCompactToHex(b *testing.B) {
-	testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-	for i := 0; i < b.N; i++ {
-		compactToHex(testBytes)
+func BenchmarkCompactToBin(b *testing.B) {
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
+		for i := 0; i < b.N; i++ {
+			compactToBin(testBytes)
+		}
 	}
 }
 
-func BenchmarkKeybytesToHex(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
-	for i := 0; i < b.N; i++ {
-		keybytesToHex(testBytes)
+func BenchmarkKeybytesToBin(b *testing.B) {
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
+		for i := 0; i < b.N; i++ {
+			keybytesToBin(testBytes)
+		}
 	}
 }
 
-func BenchmarkHexToKeybytes(b *testing.B) {
-	testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
-	for i := 0; i < b.N; i++ {
-		hexToKeybytes(testBytes)
+func BenchmarkBinToKeybytes(b *testing.B) {
+	for t := 0; t < 10000; t++ {
+		testBytes := []byte{0, 1, 1, 1, 1, 0, 0, 0, 2}
+		for i := 0; i < b.N; i++ {
+			binToKeybytes(testBytes)
+		}
 	}
 }

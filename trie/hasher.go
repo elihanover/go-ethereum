@@ -17,6 +17,8 @@
 package trie
 
 import (
+	// "fmt"
+
 	"bytes"
 	"hash"
 	"sync"
@@ -94,6 +96,7 @@ func (h *hasher) hash(n node, db *Database, force bool) (node, node, error) {
 			cn.flags.dirty = false
 		}
 	}
+	// fmt.Printf("\nend hashed, got: %+v\ngot:%+v\n", hashed, cached)
 	return hashed, cached, nil
 }
 
@@ -107,7 +110,10 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 	case *shortNode:
 		// Hash the short node's child, caching the newly hashed subtree
 		collapsed, cached := n.copy(), n.copy()
-		collapsed.Key = hexToCompact(n.Key)
+		// fmt.Printf("n.Key bin: %+v\n", n.Key)
+		collapsed.Key = binToCompact(n.Key) // this is where shit must go wrong
+		// fmt.Printf("n.Key bin: %+v\n", n.Key)
+		// fmt.Printf("compact key: %s\n", collapsed.Key)
 		cached.Key = common.CopyBytes(n.Key)
 
 		if _, ok := n.Val.(valueNode); !ok {
@@ -125,7 +131,7 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 		// Hash the full node's children, caching the newly hashed subtrees
 		collapsed, cached := n.copy(), n.copy()
 
-		for i := 0; i < 16; i++ {
+		for i := 0; i < 2; i++ { // CHANGED TO 2 FROM 16
 			if n.Children[i] != nil {
 				collapsed.Children[i], cached.Children[i], err = h.hash(n.Children[i], db, false)
 				if err != nil {
@@ -135,9 +141,10 @@ func (h *hasher) hashChildren(original node, db *Database) (node, node, error) {
 				collapsed.Children[i] = valueNode(nil) // Ensure that nil children are encoded as empty strings.
 			}
 		}
-		cached.Children[16] = n.Children[16]
-		if collapsed.Children[16] == nil {
-			collapsed.Children[16] = valueNode(nil)
+		// VALUE AT INDEX 2 NOT 16 ANYMORE
+		cached.Children[2] = n.Children[2]
+		if collapsed.Children[2] == nil {
+			collapsed.Children[2] = valueNode(nil)
 		}
 		return collapsed, cached, nil
 
@@ -184,7 +191,7 @@ func (h *hasher) store(n node, db *Database, force bool) (node, error) {
 				db.reference(common.BytesToHash(child), hash)
 			}
 		case *fullNode:
-			for i := 0; i < 16; i++ {
+			for i := 0; i < 2; i++ {
 				if child, ok := n.Children[i].(hashNode); ok {
 					db.reference(common.BytesToHash(child), hash)
 				}
@@ -200,7 +207,7 @@ func (h *hasher) store(n node, db *Database, force bool) (node, error) {
 					h.onleaf(child, hash)
 				}
 			case *fullNode:
-				for i := 0; i < 16; i++ {
+				for i := 0; i < 2; i++ {
 					if child, ok := n.Children[i].(valueNode); ok {
 						h.onleaf(child, hash)
 					}
