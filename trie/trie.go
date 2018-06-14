@@ -104,12 +104,11 @@ func New(root common.Hash, db *Database) (*Trie, error) {
 		originalRoot: root,
 	}
 	if (root != common.Hash{}) && root != emptyRoot {
-		rootnode, err := trie.resolveHash(root[:], nil) // RETURNING WRONG ROOTNODE
+		rootnode, err := trie.resolveHash(root[:], nil)
 		if err != nil {
 			return nil, err
 		}
 		trie.root = rootnode
-		// fmt.Printf("trie.root: %+v\n", trie.root)
 	}
 	return trie, nil
 }
@@ -141,75 +140,39 @@ func (t *Trie) TryGet(key []byte) ([]byte, error) {
 	}
 	return value, err
 }
-// LOOKS UP NODE BY PATH
-// INPUT WILL BE BINARY ENCODING, NOT HEX
-// MAYBE INSTEAD OF CHANING INPUT, WE
-  // CAN CHANGE keybytesToHex INTO KEYBYTESTOBIN
-	// THAT WAY, WE CAN TALK WITH OTHER HEX NODES?
-	// OR WE CAN DETECT IF PATH IS HEX OR BIN, AND THEN PROCESS ACCORDINGLY?
-
 
 func (t *Trie) tryGet(origNode node, key []byte, pos int) (value []byte, newnode node, didResolve bool, err error) {
-	// fmt.Printf("key: %x\n", key)
 	switch n := (origNode).(type) {
 	case nil:
 		return nil, nil, false, nil
 	case valueNode:
-		// fmt.Printf("\nDepth: %v", pos)
-		// fmt.Printf("\nValue node key: %x\n", key[:pos])
-		// fmt.Printf("Value Node: %+v\n", n)
 		return n, n, false, nil
 	case *shortNode:
-		// fmt.Printf("\nShort Node: %+v\n", n)
-		// fmt.Printf("\nDepth: %v", pos)
-		// fmt.Printf("\nshortnode: %+v\n", n)
-		// fmt.Printf("\nshortnode key: %+v\n", n.Key)
 		if len(key)-pos < len(n.Key) || !bytes.Equal(n.Key, key[pos:pos+len(n.Key)]) {
 			// key not found in trie
 			return nil, n, false, nil
 		}
-		// fmt.Println("hi")
-		// fmt.Printf("tryGet(val= %+v, key= %+v, pos=%x \n", n.Val, key, pos+len(n.Key))
 		value, newnode, didResolve, err = t.tryGet(n.Val, key, pos+len(n.Key))
-		// fmt.Printf("\n02\n")
 		if err == nil && didResolve {
-			// fmt.Printf("\n03\n")
 			n = n.copy()
 			n.Val = newnode
 			n.flags.gen = t.cachegen
 		}
-		// fmt.Printf("\n04\n")
-		// fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case *fullNode:
-		// fmt.Printf("\nFull Node: %+v\n", n)
-		// fmt.Printf("\nDepth: %v", pos)
-		// fmt.Printf("\nfullnode key: %+v\n", key[:pos])
-		// fmt.Printf("Go: %x\n", key[pos])
 		value, newnode, didResolve, err = t.tryGet(n.Children[key[pos]], key, pos+1)
 		if err == nil && didResolve {
-			// fmt.Printf("\n11\n")
 			n = n.copy()
 			n.flags.gen = t.cachegen
 			n.Children[key[pos]] = newnode
 		}
-		// fmt.Printf("\n12\n")
-		// fmt.Printf("\nGot node: %+v\n", newnode)
 		return value, n, didResolve, err
 	case hashNode:
-		// fmt.Printf("\nDepth: %+v", pos)
-		// fmt.Printf("hashnode\n")
 		child, err := t.resolveHash(n, key[:pos])
-		// fmt.Printf("hashchild: %+v\n", child)
-		// fmt.Printf("\n21\n")
 		if err != nil {
-			// fmt.Printf("\n22\n")
 			return nil, n, true, err
 		}
-		// fmt.Printf("\n23\n")
-		// fmt.Printf("tryget: key=%+v\nfrom node=%+v", key, child)
 		value, newnode, _, err := t.tryGet(child, key, pos)
-		// fmt.Printf("\n24\n")
 		return value, newnode, true, err
 	default:
 		panic(fmt.Sprintf("%T: invalid node: %v", origNode, origNode))
@@ -238,9 +201,7 @@ func (t *Trie) Update(key, value []byte) {
 // If a node was not found in the database, a MissingNodeError is returned.
 func (t *Trie) TryUpdate(key, value []byte) error {
 	k := keybytesToBin(key)
-	// fmt.Printf("keybytes: %x\n to bin: %+v\n", key, k)
 	if len(value) != 0 {
-		// fmt.Printf("Insert:\nKey: %s\nValue: %s\n", string(key), string(value))
 		_, n, err := t.insert(t.root, nil, k, valueNode(value))
 		if err != nil {
 			return err
@@ -265,22 +226,17 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 	}
 	switch n := n.(type) {
 	case *shortNode:
-		// fmt.Printf("key: %x\n", key)
-		// fmt.Printf("n.Key: %x\n", n.Key)
 		matchlen := prefixLen(key, n.Key)
 		// If the whole key matches, keep this short node as is
 		// and only update the value.
-		if matchlen == len(n.Key) { // if leafnode
+		if matchlen == len(n.Key) {
 			dirty, nn, err := t.insert(n.Val, append(prefix, key[:matchlen]...), key[matchlen:], value)
 			if !dirty || err != nil {
 				return false, n, err
 			}
-			// fmt.Printf("Inserted as shortnode: %+v\n", n.Key)
-			// fmt.Printf("Val: %s\n\n", nn)
 			return true, &shortNode{n.Key, nn, t.newFlag()}, nil
 		}
 		// Otherwise branch out at the index where they differ.
-		// HERE WE NEED TO BRANCH OUT NOT BY NIBBLE BUT BY BIT
 		branch := &fullNode{flags: t.newFlag()}
 		var err error
 		_, branch.Children[n.Key[matchlen]], err = t.insert(nil, append(prefix, n.Key[:matchlen+1]...), n.Key[matchlen+1:], n.Val)
@@ -296,12 +252,9 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 			return true, branch, nil
 		}
 		// Otherwise, replace it with a short node leading up to the branch.
-		// fmt.Printf("Inserted as extension: %+v\n\n", key[:matchlen])
 		return true, &shortNode{key[:matchlen], branch, t.newFlag()}, nil
 
 	case *fullNode:
-		// CHANGE KEY[0] TO JUST BE THE NEXT BIT
-		// child := 0x1 & key[0]
 		dirty, nn, err := t.insert(n.Children[key[0]], append(prefix, key[0]), key[1:], value)
 		if !dirty || err != nil {
 			return false, n, err
@@ -318,7 +271,6 @@ func (t *Trie) insert(n node, prefix, key []byte, value node) (bool, node, error
 		// We've hit a part of the trie that isn't loaded yet. Load
 		// the node and insert into it. This leaves all child nodes on
 		// the path to the value in the trie.
-		// ??
 		rn, err := t.resolveHash(n, prefix)
 		if err != nil {
 			return false, nil, err
@@ -355,7 +307,6 @@ func (t *Trie) TryDelete(key []byte) error {
 	return nil
 }
 
-// ORIGINAL
 // delete returns the new root of the trie with key deleted.
 // It reduces the trie to minimal form by simplifying
 // nodes on the way up after deleting recursively.
@@ -531,9 +482,12 @@ func (t *Trie) hashRoot(db *Database, onleaf LeafCallback) (node, node, error) {
 	return h.hash(t.root, db, true)
 }
 
+
+// VISUALIZATION AND TESTING FUNCTIONS
+
 // Decode any hash nodes from input node
 func (t *Trie) Decode(rootnode node, spaces int) {
-	padding := strings.Repeat(" ", spaces) //space padding for visualization
+	padding := strings.Repeat(" ", spaces) // space padding for visualization.
 
 	// go and decode hash nodes
 	switch n := (rootnode).(type) {
@@ -559,7 +513,6 @@ func (t *Trie) Decode(rootnode node, spaces int) {
 		if err != nil {
 			return
 		}
-		// fmt.Printf(padding + "%+v\n", child)
 		t.Decode(child, spaces+1)
 	default:
 		fmt.Sprintf("%T: invalid node: %v", rootnode, rootnode)
@@ -577,27 +530,14 @@ func (t *Trie) GetNodeTypeDistribution(rootnode node) []int {
 		return []int{0, 0, 0, 1}
 	case *shortNode:
 		dist := t.GetNodeTypeDistribution(n.Val)
-
 		if hasTerm(n.Key) {
 			// leaf node
 			dist[1] += 1
 			return dist
 		}
-
 		// otherwise, must be extension
 		dist[2] += 1
 		return dist
-
-		// for i, v := range []int{0, 0, 0, 1} {
-		// 	if v != dist[i] {
-		// 		// must be extension
-		// 		dist[2] += 1
-		// 		return dist
-		// 	}
-		// }
-		// // otherwise, matches and must be leaf
-		// dist[1] += 1
-		// return dist
 	case *fullNode:
 		dist := []int{1, 0, 0, 0}
 		for _, child := range n.Children {
@@ -619,6 +559,6 @@ func (t *Trie) GetNodeTypeDistribution(rootnode node) []int {
 	default:
 		fmt.Sprintf("%T: invalid node: %v", rootnode, rootnode)
 	}
-	// what to do if here...
+	// if here..
 	return []int{0, 0, 0, 0}
 }

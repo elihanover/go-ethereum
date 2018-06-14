@@ -137,10 +137,6 @@ func testMissingNode(t *testing.T, memonly bool) {
 	}
 	trie, _ = New(root, triedb)
 
-	// for k, v := range triedb.nodes {
-		// fmt.Printf("k: %x\n", k)
-		// fmt.Printf("v: " + string(v.blob) + "\n")
-	// }
 	_, err = trie.TryGet([]byte("123456"))
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
@@ -290,7 +286,6 @@ func TestEmptyValues(t *testing.T) {
 }
 
 func TestReplication(t *testing.T) {
-	// fmt.Printf("\n\nSTARTREP\n\n")
 	trie := newEmpty()
 	vals := []struct{ k, v string }{
 		{"do", "verb"},
@@ -304,17 +299,12 @@ func TestReplication(t *testing.T) {
 	for _, val := range vals {
 		updateString(trie, val.k, val.v)
 	}
-	// fmt.Printf("after: %+v\n", trie.root) // good here, problem not insert
-	// fmt.Printf("test2")
 	exp, err := trie.Commit(nil)
-	// fmt.Printf("commit: %+v\n", trie.root)
-	// fmt.Printf("test3")
 	if err != nil {
 		t.Fatalf("commit error: %v", err)
 	}
 
 	// create a new trie on top of the database and check that lookups work.
-	// fmt.Printf("\n\nnew guy\n\n")
 	trie2, err := New(exp, trie.db)
 	if err != nil {
 		t.Fatalf("can't recreate trie at %x: %v", exp, err)
@@ -690,7 +680,6 @@ func getString(trie *Trie, k string) []byte {
 
 func updateString(trie *Trie, k, v string) {
 	trie.Update([]byte(k), []byte(v))
-	// fmt.Printf("updated to: %+v\n", trie.root)
 }
 
 func deleteString(trie *Trie, k string) {
