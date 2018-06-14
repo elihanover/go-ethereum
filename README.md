@@ -2,7 +2,7 @@
 ## Context
 As mentioned [here](https://ethresear.ch/t/a-two-layer-account-trie-inside-a-single-layer-trie/210), reducing the radix of the state trie to 2 would decrease the size of the light client’s merkle proof by a factor of ~3.75.
 
-3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers. although extension and leaf nodes complicate this, as shown in our tests.  This results in a trie with ~15x more nodes (again, not accounting for leaf/extension nodes), a significant added burden for full nodes to store, construct merkle proofs, and hash from.  So in the end we're left with a tradeoff and a consequent discussion of how to handle it.
+3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers. although extension and leaf nodes complicate this, as shown in our tests.  This results in a trie with ~1.87x more nodes (again, not accounting for leaf/extension nodes), a significant added burden for full nodes to store, construct merkle proofs, and hash from.  So in the end we're left with a tradeoff and a consequent discussion of how to handle it.
 
 ## What We Did
 Besides changing some node properties, the one main change that was needed was a change to the encoding of the node paths.
