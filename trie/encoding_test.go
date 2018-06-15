@@ -17,8 +17,6 @@
 package trie
 
 import (
-	// "fmt"
-
 	"bytes"
 	"testing"
 )
@@ -45,25 +43,21 @@ func TestBinCompact(t *testing.T) {
         {bin: []byte{2}, compact: []byte{0x20}},
         // odd length, no terminator
         {
-            // hex: []byte{1, 2, 3, 4, 5},
             bin: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
             compact: []byte{0x11, 0x23, 0x45},
         },
         // even length, no terminator
         {
-            // hex: []byte{0, 1, 2, 3, 4, 5},
             bin: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
             compact: []byte{0x00, 0x01, 0x23, 0x45},
         },
         // odd length, terminator
         {
-            // hex: []byte{15, 1, 12, 11, 8, 16 /*term*/},
             bin: []byte{1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2 /*term*/},
             compact: []byte{0x3f, 0x1c, 0xb8},
         },
         // even length, terminator
         {
-            // hex: []byte{0, 15, 1, 12, 11, 8, 16 /*term*/},
             bin: []byte{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2 /*term*/},
             compact: []byte{0x20, 0x0f, 0x1c, 0xb8},
         },
@@ -115,16 +109,12 @@ func TestBinCompact(t *testing.T) {
 				},
     }
     for _, test := range tests {
-				// fmt.Printf("compact: %x\n", test.compact)
-				// fmt.Printf("bin: %+v\n", test.bin)
         if c := binToCompact(test.bin); !bytes.Equal(c, test.compact) {
             t.Errorf("binToCompact(%+v) -> %x, want %x", test.bin, c, test.compact)
         }
-				// fmt.Printf("bin2: %+v\n", test.bin) // test.bin changed by here
         if h := compactToBin(test.compact); !bytes.Equal(h, test.bin) {
          		t.Errorf("compactToBin(%x) -> %+v, want %+v", test.compact, h, test.bin)
         }
-				// fmt.Printf("bin3: %+v\n", test.bin)
     }
 }
 
@@ -134,23 +124,17 @@ func TestBinKeybytes(t *testing.T) {
 		{key: []byte{}, binIn: []byte{}, binOut: []byte{2}}, // ???
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			//hexIn:  []byte{1, 2, 3, 4, 5, 6, 16},
 			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
-			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
 			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x5},
-			//hexIn:  []byte{1, 2, 3, 4, 0, 5, 16},
 			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2},
-			//hexOut: []byte{1, 2, 3, 4, 0, 5, 16},
 			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2},
 		},
 		{
 			key:    []byte{0x12, 0x34, 0x56},
-			//hexIn:  []byte{1, 2, 3, 4, 5, 6},
 			binIn:  []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0},
-			//hexOut: []byte{1, 2, 3, 4, 5, 6, 16},
 			binOut: []byte{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 2},
 		},
 	}
@@ -164,38 +148,38 @@ func TestBinKeybytes(t *testing.T) {
 	}
 }
 
-func BenchmarkBinToCompact(b *testing.B) {
-	for t := 0; t < 10000; t++ {
-		testBytes := []byte{0, 1, 1, 0, 1, 0, 2 /*term*/}
-		for i := 0; i < b.N; i++ {
-			binToCompact(testBytes)
-		}
-	}
-}
-
-func BenchmarkCompactToBin(b *testing.B) {
-	for t := 0; t < 10000; t++ {
-		testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
-		for i := 0; i < b.N; i++ {
-			compactToBin(testBytes)
-		}
-	}
-}
-
-func BenchmarkKeybytesToBin(b *testing.B) {
-	for t := 0; t < 10000; t++ {
-		testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
-		for i := 0; i < b.N; i++ {
-			keybytesToBin(testBytes)
-		}
-	}
-}
-
-func BenchmarkBinToKeybytes(b *testing.B) {
-	for t := 0; t < 10000; t++ {
-		testBytes := []byte{0, 1, 1, 1, 1, 0, 0, 0, 2}
-		for i := 0; i < b.N; i++ {
-			binToKeybytes(testBytes)
-		}
-	}
-}
+// func BenchmarkBinToCompact(b *testing.B) {
+// 	for t := 0; t < 10000; t++ {
+// 		testBytes := []byte{0, 1, 1, 0, 1, 0, 2 /*term*/}
+// 		for i := 0; i < b.N; i++ {
+// 			binToCompact(testBytes)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkCompactToBin(b *testing.B) {
+// 	for t := 0; t < 10000; t++ {
+// 		testBytes := []byte{0, 15, 1, 12, 11, 8, 16 /*term*/}
+// 		for i := 0; i < b.N; i++ {
+// 			compactToBin(testBytes)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkKeybytesToBin(b *testing.B) {
+// 	for t := 0; t < 10000; t++ {
+// 		testBytes := []byte{7, 6, 6, 5, 7, 2, 6, 2, 16}
+// 		for i := 0; i < b.N; i++ {
+// 			keybytesToBin(testBytes)
+// 		}
+// 	}
+// }
+//
+// func BenchmarkBinToKeybytes(b *testing.B) {
+// 	for t := 0; t < 10000; t++ {
+// 		testBytes := []byte{0, 1, 1, 1, 1, 0, 0, 0, 2}
+// 		for i := 0; i < b.N; i++ {
+// 			binToKeybytes(testBytes)
+// 		}
+// 	}
+// }

@@ -16,8 +16,6 @@
 
 package trie
 
-// import "fmt"
-
 // Trie keys are dealt with in three distinct encodings:
 //
 // KEYBYTES encoding contains the actual key and nothing else. This encoding is the
@@ -70,13 +68,12 @@ func binToCompactOG(b []byte) []byte {
 		for i := 0; i < padding; i++ {
 			bin = append(bin, 0x0)
 		}
-	} // doesn't work for len(bin) < 4 and len(bin) % 4 != 0 ????
+	}
 	buf := make([]byte, len(bin)/8+1)
 	buf[0] = terminator << 5
 	buf[0] |= byte(padding) << 6
 	odd := (len(bin)/4&1) == 1
 	if odd { // if odd
-		// fmt.Println("is odd")
 		buf[0] |= 1 << 4 // odd flag
 		buf[0] |= bin[0] << 3 // first 4 bits is contained in the first byte
 		buf[0] |= bin[1] << 2// but what if we only have one bit?
@@ -84,9 +81,7 @@ func binToCompactOG(b []byte) []byte {
 		buf[0] |= bin[3]
 		bin = bin[4:]
 	}
-	// fmt.Printf("buf[0] 2: %x\n", buf[0])
 	decodeBits(bin, buf[1:])
-	// fmt.Printf("binside: %+v\n", bin)
 	return buf
 }
 
@@ -119,7 +114,6 @@ func binToCompact(bin []byte) []byte {
 		buf[0] |= bin[2] << 1
 		buf[0] |= bin[3]
 
-		// doesn't work for len(bin) < 4 and len(bin) % 4 != 0=
 		bin = bin[4:]
 	}
 
@@ -143,7 +137,6 @@ func compactToHex(compact []byte) []byte {
 // modified
 func compactToBin(compact []byte) []byte {
 	base := keybytesToBin(compact)
- 	// fmt.Printf("base: %+v\n", base)
 	base = base[:len(base)-1] // take off terminator bit
 	// apply odd flag
 	chop := 4 * (2 - int(base[3]))
@@ -151,21 +144,18 @@ func compactToBin(compact []byte) []byte {
 	terminator := base[2] != 0
 	// check for end padding
 	pad := int((base[0] << 1) + base[1])
-	// fmt.Printf("pad: %d\n", pad)
 	base = base[chop:len(base)-pad]
-	// fmt.Printf("base before terminator stuff: %+v\n", base)
 	// apply terminator flag
 	if terminator {
 		base = append(base, 2) // terminator
 	}
-	// fmt.Printf("base: %+v\n", base)
 	return base
 }
 
 // original
 func keybytesToHex(str []byte) []byte {
-	l := len(str)*2 + 1 // EXTRA BYTE IS TERMINATOR
-	var nibbles = make([]byte, l) // OH BECAUSE NIBBLE ARE HALF THE SIZE, BUT THE +1?
+	l := len(str)*2 + 1 
+	var nibbles = make([]byte, l)
 	for i, b := range str {
 		nibbles[i*2] = b / 16
 		nibbles[i*2+1] = b % 16
@@ -223,7 +213,6 @@ func hexToKeybytes(hex []byte) []byte {
 // binToKeybytes turns binary encoded bytes into key bytes.
 // This can only be used for keys of length % 8 == 0.
 func binToKeybytes(bin []byte) []byte {
-	// fmt.Printf("bin2kyb: %+v\n", bin)
 	if hasTerm(bin) { // does this have terminator flag?
 		bin = bin[:len(bin)-1] // if so, drop it
 	}
@@ -237,8 +226,6 @@ func binToKeybytes(bin []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBitsOG(bits []byte, bytes []byte) []byte {
-	// fmt.Printf("decode: %+v\n", bits)
-	// fmt.Printf("into %d bytes\n", len(bytes))
 	for by := 0; by < len(bytes); by++ {
 		for bt := 0; bt < 8; bt++ { // decode next 8 bits per byte
 			bytes[by] |= bits[8*by+7-bt] << uint(bt)
@@ -265,10 +252,7 @@ func decodeBitsBest(bits []byte, bytes []byte) []byte {
 
 // decodeBits into one slice of bytes.
 func decodeBits(bits []byte, bytes []byte) []byte {
-	// fmt.Printf("bits: %+v\n", bits)
-	// fmt.Printf("n bytes: %d\n", len(bytes))
 	tail := 8 - (4-len(bits)%4)%4
-	// fmt.Printf("tail: %d\n", tail)
 	nbytes := len(bytes)
 	for by := 0; by < nbytes-1; by++ {
 		bytes[by] |= bits[8*by] << 7
@@ -291,18 +275,6 @@ func decodeBits(bits []byte, bytes []byte) []byte {
 	}
 	return bytes
 }
-
-// decodeBits into one slice of bytes.
-// func decodeBits2(bits []byte, bytes []byte) []byte {
-// 	fmt.Printf("bits: %+v\n", bits)
-// 	fmt.Printf("bytes: %+v\n", bytes)
-// 	tail := len(bits) % 4 + 4
-// 	nbytes := len(bytes)
-// 	for bt := 0; bt < len(bits)-padding; bt += 4 {
-// 		bytes[bt/8] |= bits[8*by] << 7
-// 	}
-// 	return bytes
-// }
 
 func testDecodeBits(bits []byte) []byte {
 	bytes := make([]byte, len(bits)/8)
@@ -335,7 +307,6 @@ func prefixLen(a, b []byte) int {
 	return i
 }
 
-// DON'T NEED (?)
 // prefixBitLen returns the length of the common prefix of a and b in terms of BITS.
 func prefixBitLen(a, b []byte) int {
 	var lenA = len(a)*8

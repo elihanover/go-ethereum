@@ -106,7 +106,7 @@ func BenchmarkAll(b *testing.B) {
 	averagedDist := []int{0,0,0,0}
 	averageProofsize := 0
 
-	samples := 100
+	samples := 1000
 	trieSize := 100
 
 	for i := 0; i < samples; i++ {
