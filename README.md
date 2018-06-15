@@ -61,40 +61,40 @@ To account for this, we used the first two bits of the prefix to represent some 
 
 ## Benchmarks
 
-##### Hex Encoding Benchmark Results:
+##### Radix 16: Encoding Benchmark Results:
     BenchmarkHexToCompact-4    	    50000000	        30.0 ns/op
     BenchmarkCompactToHex-4    	    30000000	        37.6 ns/op
     BenchmarkKeybytesToHex-4   	    30000000	        50.4 ns/op
     BenchmarkHexToKeybytes-4   	    50000000	        25.6 ns/op
 
-##### Binary Encoding Benchmark Results:
+##### Radix 2: Encoding Benchmark Results:
     BenchmarkBinToCompact-4        	50000000	        27.4 ns/op
     BenchmarkCompactToBin-4        	20000000	        76.3 ns/op
     BenchmarkKeybytesToBin-4       	20000000	        90.6 ns/op
     BenchmarkBinToKeybytes-4       	50000000	        24.0 ns/op
 
-##### Hex Proof Benchmark Results:
+##### Radix 16: Proof Benchmark Results:
     BenchmarkProve-4           	    2000	    801100 ns/op
     BenchmarkVerifyProof100-4     	  200000	     10789 ns/op
     BenchmarkVerifyProof1000-4     	  200000	     11673 ns/op
     BenchmarkVerifyProof10000-4    	  200000	     10828 ns/op
     BenchmarkVerifyProof100000-4   	  200000	     12626 ns/op
     
-##### Binary Proof Benchmark Results:
+##### Radix 2: Proof Benchmark Results:
     BenchmarkProve-4               	     300	     3633869 ns/op
     BenchmarkVerifyProof100-4         100000	       10826 ns/op
     BenchmarkVerifyProof1000-4     	  100000	       11997 ns/op
     BenchmarkVerifyProof10000-4    	  200000	       10998 ns/op
     BenchmarkVerifyProof100000-4   	  100000	       14474 ns/op
     
-##### Hex Trie Method Benchmark Results:
+##### Radix 16: Trie Benchmark Results:
     BenchmarkGet-4                 	 5000000	       247 ns/op
     BenchmarkGetDB-4               	10000000	       168 ns/op
     BenchmarkUpdateBE-4            	 1000000	      1863 ns/op
     BenchmarkUpdateLE-4            	 1000000	      2413 ns/op
     BenchmarkHash-4                	  300000	      4149 ns/op
     
-##### Binary Trie Method Benchmark Results:
+##### Radix 2: Trie Benchmark Results:
     BenchmarkGet-4                 	 3000000	         519 ns/op
     BenchmarkGetDB-4               	 3000000	         406 ns/op
     BenchmarkUpdateBE-4            	 1000000	        2029 ns/op
