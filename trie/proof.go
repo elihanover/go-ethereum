@@ -27,6 +27,64 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+
+// GetProof constructs a merkle proof for node at key.
+// The merkle proof is the hashes of each sibling node at each height.
+// WE ALSO WANT TO MAKE SURE THAT IT DEAL WITH MISSING NODES LIKE NORMAL PROOF?
+func (t *Trie) GetProof(key []byte) ([]node, []byte) {
+	siblings := []node{}
+	pkey := []byte{}
+	key = keybytesToBin(key)
+	tn := t.root
+	for len(key) > 0 && tn != nil {
+		switch n := tn.(type) {
+		case *shortNode:
+			if len(key) < len(n.Key) || !bytes.Equal(n.Key, key[:len(n.Key)]) {
+				// The trie doesn't contain the key.
+				tn = nil
+			} else {
+				tn = n.Val
+				key = key[len(n.Key):]
+			}
+			// nodes = append(nodes, n) // UHH, just don't include?
+		case *fullNode:
+			tn = n.Children[key[0]]
+			key = key[1:]
+			// append siblings
+			siblings = append(siblings, n.Children[(key[0] + 1) % 3])
+			siblings = append(siblings, n.Children[(key[0] + 2) % 3])
+			// append path step to pkey
+			pkey = append(pkey, byte(key[0]))
+		case hashNode:
+			var err error
+			tn, err = t.resolveHash(n, nil)
+			if err != nil {
+				log.Error(fmt.Sprintf("Unhandled trie error: %v", err))
+				return nil, nil
+			}
+		default:
+			panic(fmt.Sprintf("%T: invalid node: %v", tn, tn))
+		}
+	}
+	hasher := newHasher(0, 0, nil)
+	proof := make([]node, len(siblings)) // set to len keys
+	for i, n := range siblings {
+		// Don't bother checking for errors here since hasher panics
+		// if encoding doesn't work and we're not writing to any database.
+		n, _, _ = hasher.hashChildren(n, nil)
+		hn, _ := hasher.store(n, nil, false)
+		// if _, ok := hn.(hashNode); ok {
+		// 	hn, _ := hasher.store(n, nil, false)
+		// 	// enc, _ := rlp.EncodeToBytes(n)
+		// 	// hash := crypto.Keccak256Hash(enc)
+		// 	// ^ INSTEAD OF STORING VALUE, JUST STORE HASH OF SIBLINGS
+		// 	proof[i] = hn // need to use enc to construct nodes to the top
+		// }
+		proof[i] = hn
+	}
+	return proof, pkey
+}
+
 // Prove constructs a merkle proof for key. The result contains all encoded nodes
 // on the path to the value at key. The value itself is also included in the last
 // node and can be retrieved by verifying the proof.
@@ -126,6 +184,35 @@ func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (valu
 			return cld, nil, i + 1
 		}
 	}
+}
+
+// VerifyProof 2 hashes merkle proof nodes in order to check that the root matches
+func VerifyProofOf(checkHash node, rootHash node, proof []node, pkey []byte) (bool, node) {
+	// for each height
+	fmt.Printf("checkHash: %x\n", checkHash)
+	fmt.Printf("rootHash: %x\n", rootHash)
+	fmt.Printf("proof: %x\n", proof)
+	fmt.Printf("pkey: %x\n", pkey)
+	steps := make([]node, 0)
+	h := newHasher(0,0,nil) // initialize hasher
+	for i := len(proof); i > 0; i -= 2 {
+		// get sibling nodes for this height
+		checkHashIndex := pkey[0]
+		siblings := [3]node{}
+		siblings[checkHashIndex]= checkHash
+		siblings[(checkHashIndex+1)%3] = proof[i-2]
+		siblings[(checkHashIndex+2)%3] = proof[i-1]
+		fn := &fullNode{siblings, nodeFlag{}}
+		checkHash, _ := h.store(fn, nil, false)
+		// create rlp encoding so we can hash it
+		fmt.Printf("siblings: %+v\n", siblings)
+		// checkHash, _ := rlp.EncodeToBytes(siblings)
+		fmt.Printf("checkhash: %x\n", checkHash)
+		pkey = pkey[1:]
+		steps = append(steps, checkHash)
+	}
+	fmt.Printf("steps: %x\n", steps)
+	return rootHash == checkHash, checkHash
 }
 
 func get(tn node, key []byte) ([]byte, node) {

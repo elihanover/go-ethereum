@@ -45,7 +45,7 @@ func TestIterator(t *testing.T) {
 	trie.Commit(nil)
 
 	found := make(map[string]string)
-	it := NewIterator(trie.NodeIterator(nil)) // MUST BE PROBLEM
+	it := NewIterator(trie.NodeIterator(nil))
 	for it.Next() {
 		found[string(it.Key)] = string(it.Value)
 	}
