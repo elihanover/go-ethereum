@@ -139,6 +139,8 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
 				if !ok {
 					hash = crypto.Keccak256(enc)
 				}
+				fmt.Printf("enc: %x\n", enc)
+				fmt.Printf("hash: %x\n", hash)
 				proofDb.Put(hash, enc)
 			}
 		}
@@ -163,8 +165,11 @@ func (t *SecureTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) err
 func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (value []byte, err error, nodes int) {
 	key = keybytesToBin(key)
 	wantHash := rootHash
+	fmt.Printf("Start Merkle Branch\n")
 	for i := 0; ; i++ {
 		buf, _ := proofDb.Get(wantHash[:])
+		fmt.Printf("want hash: %+v\n", wantHash)
+		fmt.Printf("proofDB entry: %+v\n", buf)
 		if buf == nil {
 			return nil, fmt.Errorf("proof node %d (hash %064x) missing", i, wantHash), i
 		}

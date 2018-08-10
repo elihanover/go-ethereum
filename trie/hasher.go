@@ -17,9 +17,6 @@
 package trie
 
 import (
-	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"bytes"
 	"hash"
 	"sync"
@@ -85,8 +82,6 @@ func (h *hasher) hash(n node, db *Database, force bool) (node, node, error) {
 	// the dirty flag in commit mode. It's fine to assign these values directly
 	// without copying the node first because hashChildren copies it.
 	cachedHash, _ := hashed.(hashNode)
-	atHash := crypto.Keccak256Hash(cachedHash)
-	fmt.Printf("In hasher: hash = %x\n", atHash) // printing out the hash nodes
 	switch cn := cached.(type) {
 	case *shortNode:
 		cn.flags.hash = cachedHash

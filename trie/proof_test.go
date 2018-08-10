@@ -90,42 +90,94 @@ func TestVerifyBadProof(t *testing.T) {
 	}
 }
 
-func TestGetProof(t *testing.T) {
-	trie, _ := randomTrie(500)
-	// it := NewIterator(trie.NodeIterator(nil))
-	// use iterator to iterate through nodes
-	it := &nodeIterator{trie: trie} // create iterator for trie
-	for it.Next(true) {
-		// get node iterator is on
-		itstate, _, _, _ := it.peek(false) // FOR SOME REASON THIS IS <NIL>
-		fmt.Printf("itstate: %+v\n", itstate)
-		n := itstate.node
-		if n != nil {
-			proof, pkey := trie.GetProof(it.path)
-			fmt.Printf("it.Key: %+v\n", it.path)
-			fmt.Printf("node: %x\n", n)
-			match, proot := VerifyProofOf(n, trie.root, proof, pkey)
-			if !match {
-				t.Fatalf("VerifyProofOf returned wrong value for key %x: got %x, want %x", it.path, proot, trie.root)
-			} else {
-				t.Errorf("VerifyProofOf returned the RIGHT value for key %x: got %x, want %x", it.path, proot, trie.root)
-			}
-		}
-	}
-}
-
-// test that we're calculating parent hashes correctly
-// func TestParentHashing(t *testing.T) {
-// 	trie := newEmpty()
+// // Why did I use an iterator instead of looping through vals??
+// func TestGetProofNew(t *testing.T) {
+// 	trie, vals := randomTrie(500)
+// 	for _, kv := range vals {
+// 		fmt.Printf("kv.k: %+v\n", kv.k)
+// 		fmt.Printf("kv.v: %+v\n", kv.v)
+// 		proof, pkey := trie.GetProof(kv.k)
+// 		fmt.Printf("proof: %+v\n", proof)
+// 		fmt.Printf("pkey: %+v\n", pkey)
 //
-// 	trie.Update([]byte("hi"), []byte("there"))
-// 	trie.Update([]byte("howyou"), []byte("doin"))
-// 	trie.Update([]byte("mmm"), []byte("hmmm"))
-// 	parentHash := trie.Hash()
+// 		// need to get node at that key in order to check
+// 		// HASH KV.V (is that the RLP????)
+// 		// GET RLP FROM KV...
 //
-// 	enc, _ = rlp.EncodeToBytes(trie.root)
-//
+// 		// match, proot := VerifyProofOf(n, trie.root, proof, pkey)
+// 		// if !match {
+// 		// 	t.Fatalf("VerifyProofOf returned wrong value for key %x: got %x, want %x", it.path, proot, trie.root)
+// 		// } else {
+// 		// 	t.Errorf("VerifyProofOf returned the RIGHT value for key %x: got %x, want %x", it.path, proot, trie.root)
+// 		// }
+// 	}
 // }
+
+
+// func TestGetProofIterator(t *testing.T) {
+// 	db, trie, _ := makeTestTrie()
+// 	// Gather all the node hashes found by the iterator
+// 	for it := trie.NodeIterator(nil); it.Next(true); {
+// 		if it.Hash() != (common.Hash{}) {
+// 			fmt.Printf("HASH: %+v\n", it.Hash())
+// 			fmt.Printf("PATH: %+v\n", it.Path())
+//
+// 			val, _ := trie.TryGet(it.Path())
+// 			fmt.Printf("val: %+v\n", val)
+//
+// 			proof, pkey := trie.GetProof(it.Path())
+// 			fmt.Printf("proof: %x\n", proof)
+// 			fmt.Printf("pkey: %+v\n", pkey)
+//
+// 			n, preimage := db.Node(it.Hash())
+// 			fmt.Printf("node: %+v\n", n)
+// 			fmt.Printf("preimage: %+v\n", preimage)
+//
+// 			// need to get actual node...from db maybe
+// 			match, proot := VerifyProofOf(n, trie.root, proof, pkey)
+// 		}
+// 	}
+// }
+
+// TestGetProof constructs a proof
+// func TestGetProof(t *testing.T) {
+// 	trie, _ := randomTrie(500)
+// 	// it := NewIterator(trie.NodeIterator(nil))
+// 	// use iterator to iterate through nodes
+// 	it := &nodeIterator{trie: trie} // create iterator for trie
+// 	for it.Next(true) {
+// 		// get node iterator is on
+// 		itstate, _, _, _ := it.peek(false) // FOR SOME REASON THIS IS <NIL>
+// 		fmt.Printf("itstate: %+v\n", itstate)
+// 		n := itstate.node
+// 		if n != nil {
+// 			proof, pkey := trie.GetProof(it.path)
+// 			fmt.Printf("it.Key: %+v\n", it.path)
+// 			fmt.Printf("node: %x\n", n)
+// 			match, proot := VerifyProofOf(n, trie.root, proof, pkey)
+// 			if !match {
+// 				t.Fatalf("VerifyProofOf returned wrong value for key %x: got %x, want %x", it.path, proot, trie.root)
+// 			} else {
+// 				t.Errorf("VerifyProofOf returned the RIGHT value for key %x: got %x, want %x", it.path, proot, trie.root)
+// 			}
+// 		}
+// 	}
+// }
+
+// TEST THAT WE'RE CALCULATING PARENT HASHES CORRECTLY
+func TestParentHashing(t *testing.T) {
+	trie := newEmpty()
+
+	trie.Update([]byte("hi"), []byte("there"))
+	trie.Update([]byte("howyou"), []byte("doin"))
+	trie.Update([]byte("mmm"), []byte("hmmm"))
+	// parentHash := trie.Hash()
+
+	trie.Decode(trie.root, 4)
+	t.Fatalf("wtfffffff\n")
+
+	// enc, _ = rlp.EncodeToBytes(trie.root)
+}
 
 // mutateByte changes one byte in b.
 func mutateByte(b []byte) {
