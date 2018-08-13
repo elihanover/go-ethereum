@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb"
+	// "github.com/ethereum/go-ethereum/crypto"
+	// "github.com/ethereum/go-ethereum/ethdb"
 )
 
 func init() {
@@ -35,61 +35,49 @@ func init() {
 }
 
 func TestProof(t *testing.T) {
-	trie, vals := randomTrie(5000000)
+	trie, vals := randomTrie(500000)
 	root := trie.Hash()
+	aveproofsize := 0
+	ps := 0
 	for _, kv := range vals {
-		proofs := ethdb.NewMemDatabase()
-		if trie.Prove(kv.k, 0, proofs) != nil {
+		ps += 1
+
+		proof, err := trie.Prove(kv.k, 0)
+		if err != nil {
 			t.Fatalf("missing key %x while constructing proof", kv.k)
 		}
-		// fmt.Printf("proofs: %x\n", proofs)
-		// fmt.Printf("proofs: %+v\n", []byte(fmt.Sprintf("%v", proofs)))
-		// fmt.Printf("len: %d\n", len([]byte(fmt.Sprintf("%v", proofs))))
-		keys:=proofs.Keys()
-		kbytes := 0
-		vbytes := 0
-		// k2 := 0
-		// v2 := 0
-		for _, key := range keys {
-			kbytes += len(key) // add bytes in key
-			// k2 += unsafe.Sizeof(key)
-			// then add bytes of memory
-			// fmt.Println(key)
-			value, _ := proofs.Get(key)
-			vbytes += len(value)
-			// v2 += unsafe.Sizeof(value)
+
+		proofsize := 0
+		for _, p := range proof {
+			proofsize += len(p)
 		}
-		fmt.Println(len(keys))
-		fmt.Println(kbytes)
-		fmt.Println(vbytes)
-		// fmt.Println(k2)
-		// fmt.Println(v2)
-		total := kbytes + vbytes
-		// t2 := k2 + v2
-		fmt.Println(total)
-		// fmt.Println(t2)
-		t.Fatalf("blah")
-		val, err, _ := VerifyProof(root, kv.k, proofs)
+		aveproofsize += proofsize
+		// fmt.Printf("proofsize: %+v\n", proofsize)
+
+		val, err, _ := VerifyProof(root, kv.k, proof)
 		if err != nil {
-			t.Fatalf("VerifyProof error for key %x: %v\nraw proof: %v", kv.k, err, proofs)
+			t.Fatalf("VerifyProof error for key %x: %v\nraw proof: %v", kv.k, err, proof)
 		}
 		if !bytes.Equal(val, kv.v) {
 			t.Fatalf("VerifyProof returned wrong value for key %x: got %x, want %x", kv.k, val, kv.v)
 		}
 	}
+	fmt.Println(aveproofsize)
+	fmt.Println(ps)
+	fmt.Println(aveproofsize/ps)
+	t.Fatalf("blah")
 }
 
 func TestOneElementProof(t *testing.T) {
 	trie := new(Trie)
 	updateString(trie, "k", "v")
-	proofs := ethdb.NewMemDatabase()
-	trie.Prove([]byte("k"), 0, proofs)
-	if len(proofs.Keys()) != 1 {
+	proof, err := trie.Prove([]byte("k"), 0)
+	if len(proof) != 1 {
 		t.Error("proof should have one element")
 	}
-	val, err, _ := VerifyProof(trie.Hash(), []byte("k"), proofs)
+	val, err, _ := VerifyProof(trie.Hash(), []byte("k"), proof)
 	if err != nil {
-		t.Fatalf("VerifyProof error: %v\nproof hashes: %v", err, proofs.Keys())
+		t.Fatalf("VerifyProof error: %v\nproof hashes: %v", err, proof)
 	}
 	if !bytes.Equal(val, []byte("v")) {
 		t.Fatalf("VerifyProof returned wrong value: got %x, want 'k'", val)
@@ -100,18 +88,16 @@ func TestVerifyBadProof(t *testing.T) {
 	trie, vals := randomTrie(800)
 	root := trie.Hash()
 	for _, kv := range vals {
-		proofs := ethdb.NewMemDatabase()
-		trie.Prove(kv.k, 0, proofs)
-		if len(proofs.Keys()) == 0 {
+		proof, _ := trie.Prove(kv.k, 0)
+		if len(proof) == 0 {
 			t.Fatal("zero length proof")
 		}
-		keys := proofs.Keys()
-		key := keys[mrand.Intn(len(keys))]
-		node, _ := proofs.Get(key)
-		proofs.Delete(key)
+
+		node := proof[0]
 		mutateByte(node)
-		proofs.Put(crypto.Keccak256(node), node)
-		if _, err, _ := VerifyProof(root, kv.k, proofs); err == nil {
+		proof = proof[1:]
+		proof = append(proof, node)
+		if _, err, _ := VerifyProof(root, kv.k, proof); err == nil {
 			t.Fatalf("expected proof to fail for key %x", kv.k)
 		}
 	}
@@ -158,12 +144,12 @@ func BenchmarkAll(b *testing.B) {
 		// b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			kv := vals[keys[i%len(keys)]]
-			proofs := ethdb.NewMemDatabase()
-			if trie.Prove(kv.k, 0, proofs); len(proofs.Keys()) == 0 {
+			proof, _ := trie.Prove(kv.k, 0)
+			if len(proof) == 0 {
 				b.Fatalf("zero length proof for %x", kv.k)
 			}
 
-			averageProofsize += (len(proofs.Keys()))
+			averageProofsize += len(proof)
 		}
 	}
 

@@ -387,9 +387,6 @@ func testIteratorContinueAfterSeekError(t *testing.T, memonly bool) {
 	if !memonly {
 		triedb.Commit(root, true)
 	}
-	for _, node := range triedb.nodes {
-		fmt.Printf("%x\n", node)
-	}
 	barNodeHash := common.HexToHash("e482c060a074ddd51a0de980185b73b614109c45673c79257bfc3d419b694f5fa1a95dc23b")
 	var (
 		barNodeBlob []byte
