@@ -35,13 +35,40 @@ func init() {
 }
 
 func TestProof(t *testing.T) {
-	trie, vals := randomTrie(500)
+	trie, vals := randomTrie(5000000)
 	root := trie.Hash()
 	for _, kv := range vals {
 		proofs := ethdb.NewMemDatabase()
 		if trie.Prove(kv.k, 0, proofs) != nil {
 			t.Fatalf("missing key %x while constructing proof", kv.k)
 		}
+		// fmt.Printf("proofs: %x\n", proofs)
+		// fmt.Printf("proofs: %+v\n", []byte(fmt.Sprintf("%v", proofs)))
+		// fmt.Printf("len: %d\n", len([]byte(fmt.Sprintf("%v", proofs))))
+		keys:=proofs.Keys()
+		kbytes := 0
+		vbytes := 0
+		// k2 := 0
+		// v2 := 0
+		for _, key := range keys {
+			kbytes += len(key) // add bytes in key
+			// k2 += unsafe.Sizeof(key)
+			// then add bytes of memory
+			// fmt.Println(key)
+			value, _ := proofs.Get(key)
+			vbytes += len(value)
+			// v2 += unsafe.Sizeof(value)
+		}
+		fmt.Println(len(keys))
+		fmt.Println(kbytes)
+		fmt.Println(vbytes)
+		// fmt.Println(k2)
+		// fmt.Println(v2)
+		total := kbytes + vbytes
+		// t2 := k2 + v2
+		fmt.Println(total)
+		// fmt.Println(t2)
+		t.Fatalf("blah")
 		val, err, _ := VerifyProof(root, kv.k, proofs)
 		if err != nil {
 			t.Fatalf("VerifyProof error for key %x: %v\nraw proof: %v", kv.k, err, proofs)

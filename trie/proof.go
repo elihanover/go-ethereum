@@ -81,6 +81,9 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
 				if !ok {
 					hash = crypto.Keccak256(enc)
 				}
+				// fmt.Printf("i: %d\n", i)
+				// fmt.Printf("hash: %+v\n", hash)
+				// fmt.Printf("enc: %+v\n", enc)
 				proofDb.Put(hash, enc)
 			}
 		}
