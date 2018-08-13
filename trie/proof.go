@@ -85,6 +85,62 @@ func (t *Trie) GetProof(key []byte) ([]node, []byte) {
 	return proof, pkey
 }
 
+// Prove2 returns the list of nodes along the merkle branch to a node
+func (t *Trie) Prove2(key []byte, fromLevel uint) ([][]byte, error) {
+	// Collect all nodes on the path to key.
+	key = keybytesToBin(key)
+	nodes := []node{}
+	tn := t.root
+	for len(key) > 0 && tn != nil {
+		switch n := tn.(type) {
+		case *shortNode:
+			if len(key) < len(n.Key) || !bytes.Equal(n.Key, key[:len(n.Key)]) {
+				// The trie doesn't contain the key.
+				tn = nil
+			} else {
+				tn = n.Val
+				key = key[len(n.Key):]
+			}
+			nodes = append(nodes, n)
+		case *fullNode:
+			tn = n.Children[key[0]]
+			key = key[1:]
+			nodes = append(nodes, n)
+		case hashNode:
+			var err error
+			tn, err = t.resolveHash(n, nil)
+			if err != nil {
+				log.Error(fmt.Sprintf("Unhandled trie error: %v", err))
+				return nil, err
+			}
+		default:
+			panic(fmt.Sprintf("%T: invalid node: %v", tn, tn))
+		}
+	}
+
+	// return the list of RLP encoded nodes
+	hasher := newHasher(0, 0, nil)
+	// proof := make([][]byte, len(nodes))
+	proof := [][]byte{}
+	for i, n := range nodes {
+		// Don't bother checking for errors here since hasher panics
+		// if encoding doesn't work and we're not writing to any database.
+		n, _, _ = hasher.hashChildren(n, nil)
+		hn, _ := hasher.store(n, nil, false)
+		if _, ok := hn.(hashNode); ok || i == 0 {
+			// If the node's database encoding is a hash (or is the
+			// root node), it becomes a proof element.
+			if fromLevel > 0 {
+				fromLevel--
+			} else {
+				enc, _ := rlp.EncodeToBytes(n)
+				proof = append(proof, enc)
+			}
+		}
+	}
+	return proof, nil
+}
+
 // Prove constructs a merkle proof for key. The result contains all encoded nodes
 // on the path to the value at key. The value itself is also included in the last
 // node and can be retrieved by verifying the proof.
@@ -139,8 +195,8 @@ func (t *Trie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) error {
 				if !ok {
 					hash = crypto.Keccak256(enc)
 				}
-				fmt.Printf("enc: %x\n", enc)
-				fmt.Printf("hash: %x\n", hash)
+				// fmt.Printf("enc: %x\n", enc)
+				// fmt.Printf("hash: %x\n", hash)
 				proofDb.Put(hash, enc)
 			}
 		}
@@ -165,11 +221,11 @@ func (t *SecureTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.Putter) err
 func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (value []byte, err error, nodes int) {
 	key = keybytesToBin(key)
 	wantHash := rootHash
-	fmt.Printf("Start Merkle Branch\n")
+	// fmt.Printf("Start Merkle Branch\n")
 	for i := 0; ; i++ {
 		buf, _ := proofDb.Get(wantHash[:])
-		fmt.Printf("want hash: %+v\n", wantHash)
-		fmt.Printf("proofDB entry: %+v\n", buf)
+		// fmt.Printf("want hash: %+v\n", wantHash)
+		// fmt.Printf("proofDB entry: %+v\n", buf)
 		if buf == nil {
 			return nil, fmt.Errorf("proof node %d (hash %064x) missing", i, wantHash), i
 		}
@@ -191,7 +247,43 @@ func VerifyProof(rootHash common.Hash, key []byte, proofDb DatabaseReader) (valu
 	}
 }
 
-// VerifyProof 2 hashes merkle proof nodes in order to check that the root matches
+func VerifyProof2(rootHash common.Hash, key []byte, proof [][]byte) (value []byte, err error, nodes int) {
+	key = keybytesToBin(key)
+	wantHash := rootHash
+	for i := 0; ; i++ {
+		fmt.Printf("want hash: %+v\n", wantHash)
+		fmt.Printf("proof entry hash: %+v\n", crypto.Keccak256(proof[i]))
+
+		if proof[i] == nil {
+			return nil, fmt.Errorf("proof node %d (hash %064x) missing", i, wantHash), i
+		}
+
+		// check that they are equal
+		hash := crypto.Keccak256(proof[i])
+		if !bytes.Equal(hash, wantHash.Bytes()) {
+			return nil, fmt.Errorf("hash mismatch, got: %+v, expected: %+v\n", wantHash, proof[i]), i
+		}
+
+		n, err := decodeNode(wantHash[:], proof[i], 0)
+		if err != nil {
+			return nil, fmt.Errorf("bad proof node %d: %v", i, err), i
+		}
+		keyrest, cld := get(n, key)
+		switch cld := cld.(type) {
+		case nil:
+			// The trie doesn't contain the key.
+			return nil, nil, i
+		case hashNode:
+			key = keyrest
+			copy(wantHash[:], cld)
+		case valueNode:
+			return cld, nil, i + 1
+		}
+	}
+}
+
+
+// VerifyProofOf hashes merkle proof nodes in order to check that the root matches
 func VerifyProofOf(checkHash node, rootHash node, proof []node, pkey []byte) (bool, node) {
 	// for each height
 	fmt.Printf("checkHash: %x\n", checkHash)

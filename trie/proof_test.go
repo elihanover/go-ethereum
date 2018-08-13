@@ -52,6 +52,43 @@ func TestProof(t *testing.T) {
 	}
 }
 
+func TestProof2(t *testing.T) {
+	trie, vals := randomTrie(500)
+	root := trie.Hash()
+	for _, kv := range vals {
+		proofs, err := trie.Prove2(kv.k, 0)
+		if err != nil {
+			t.Fatalf("missing key %x while constructing proof", kv.k)
+		}
+
+		// print out proof
+		fmt.Println("hi")
+		fmt.Println(proofs)
+		total := 0
+		for _, p := range proofs {
+			fmt.Println(p)
+			fmt.Println(len(p))
+			total += len(p)
+		}
+		fmt.Println(total)
+		fmt.Println("ho")
+
+
+		val, err, _ := VerifyProof2(root, kv.k, proofs)
+		if err != nil {
+			t.Fatalf("VerifyProof error for key %x: %v\nraw proof: %v", kv.k, err, proofs)
+		}
+		if !bytes.Equal(val, kv.v) {
+			t.Fatalf("VerifyProof returned wrong value for key %x: got %x, want %x", kv.k, val, kv.v)
+		} else {
+			fmt.Printf("val: %+v\n", val)
+			fmt.Printf("kv.v: %+v\n", kv.v)
+		}
+
+		t.Fatalf("uhhhh")
+	}
+}
+
 func TestOneElementProof(t *testing.T) {
 	trie := new(Trie)
 	updateString(trie, "k", "v")
@@ -165,19 +202,19 @@ func TestVerifyBadProof(t *testing.T) {
 // }
 
 // TEST THAT WE'RE CALCULATING PARENT HASHES CORRECTLY
-func TestParentHashing(t *testing.T) {
-	trie := newEmpty()
-
-	trie.Update([]byte("hi"), []byte("there"))
-	trie.Update([]byte("howyou"), []byte("doin"))
-	trie.Update([]byte("mmm"), []byte("hmmm"))
-	// parentHash := trie.Hash()
-
-	trie.Decode(trie.root, 4)
-	t.Fatalf("wtfffffff\n")
-
-	// enc, _ = rlp.EncodeToBytes(trie.root)
-}
+// func TestParentHashing(t *testing.T) {
+// 	trie := newEmpty()
+//
+// 	trie.Update([]byte("hi"), []byte("there"))
+// 	trie.Update([]byte("howyou"), []byte("doin"))
+// 	trie.Update([]byte("mmm"), []byte("hmmm"))
+// 	// parentHash := trie.Hash()
+//
+// 	trie.Decode(trie.root, 4)
+// 	t.Fatalf("wtfffffff\n")
+//
+// 	// enc, _ = rlp.EncodeToBytes(trie.root)
+// }
 
 // mutateByte changes one byte in b.
 func mutateByte(b []byte) {

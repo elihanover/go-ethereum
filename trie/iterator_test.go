@@ -109,7 +109,7 @@ func TestNodeIteratorCoverage(t *testing.T) {
 	}
 	// Cross check the hashes and the database itself
 	for hash := range hashes {
-		fmt.Printf("HASHO: %+v\n", hash)
+		// fmt.Printf("HASHO: %+v\n", hash)
 		if _, err := db.Node(hash); err != nil {
 			t.Errorf("failed to retrieve reported node %x: %v", hash, err)
 		}
@@ -387,9 +387,6 @@ func testIteratorContinueAfterSeekError(t *testing.T, memonly bool) {
 	root, _ := ctr.Commit(nil)
 	if !memonly {
 		triedb.Commit(root, true)
-	}
-	for _, node := range triedb.nodes {
-		fmt.Printf("%x\n", node)
 	}
 	barNodeHash := common.HexToHash("e482c060a074ddd51a0de980185b73b614109c45673c79257bfc3d419b694f5fa1a95dc23b")
 	var (
