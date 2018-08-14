@@ -1,17 +1,26 @@
 # Binary Patricia State Trie
-## Context
-As mentioned [here](https://ethresear.ch/t/a-two-layer-account-trie-inside-a-single-layer-trie/210), reducing the radix of the state trie to 2 would decrease the size of the light client’s merkle proof by a factor of ~3.75.
+## TL;DR
+By using a binary Merkle Patricia tree and removing redundant hash nodes from Merkle proofs, we can reduce the size of proofs by over 40%.
 
-3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers. although extension and leaf nodes complicate this, as shown in our tests.  This results in a trie with ~1.87x more nodes (again, not accounting for leaf/extension nodes), an added burden for full nodes to store, construct merkle proofs, and hash from.  So in the end we're left with a tradeoff and a consequent discussion of how to handle it.
+## Context
+As mentioned [here](https://ethresear.ch/t/a-two-layer-account-trie-inside-a-single-layer-trie/210), reducing the radix of the state trie to 2 would decrease the size of the light client’s optimal merkle proof by a factor of ~3.75.
+
+3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers.  The cost of this is a trie with 87% more nodes (again, not accounting for leaf/extension nodes), an added burden for full nodes to store, construct merkle proofs, and hash from.
 
 ## What We Did
-Besides changing some node properties, the one main change that was needed was a change to the encoding of the node paths.
+### "Hashless" Merkle Proofs
+In its current implementation, Merkle proofs are constructed as key/value mappings where the hash of the node is the key to the nodes RLP encoding.  However, can avoid storing the hash keys of the database entirely (this approach is hinted at in the [Ethereum Wishlist](https://github.com/ethereum/wiki/wiki/Wishlist#trie)).  This is vital in a radix 2 implementation as the Merkle branch can be up to 4x longer that in the radix 16 implementation, meaning 4x the hash keys to store in the proof.  Even with significantly smaller nodes, this adds up.
 
+#### Solution
+Instead of using the proof database hash keys to check for the next valid proof node, we instead compare the hash of the next proof node with the next child hash node.  This allows us to bypass storing the hash keys for each proof node.
+
+### Bin-Prefix "BP" Encoding
+Besides changing some node properties, the one main change that was needed was a change to the encoding of the node paths.
 A node's path can be encoded in either HP (referred to as *compact* encoding in the code) or hex (binary in our case).
 
 #### Compact encoding looks as follows:
 
-##### Prefix: high nibble of first byte
+##### (Hex) Prefix: high nibble of first byte
     bit 0: no meaning
     bit 1: no meaning
     bit 2: terminator bit (set to 1 if path ends in 16)
@@ -39,6 +48,13 @@ However in the case of binary paths, you need 8 characters per byte, which means
 
 To account for this, we used the first two bits of the prefix to represent some extra padding that was added to the end of the path.  We took advantage of the four padding bits implemented by the HP encoding, and added 0-3 bits of padding.
 
+##### (Bin) Prefix: high nibble of first byte
+    bit 0: padding bit
+    bit 1: padding bit
+    bit 2: terminator bit (set to 1 if path ends in 16)
+    bit 3: odd/even bit (set to 1 if path is odd number of hex chars)
+
+
 ###### Example 1:
     Bin: 110010
     Compact': [1000 0000] [1100 1000]
@@ -57,47 +73,38 @@ To account for this, we used the first two bits of the prefix to represent some 
   In this case we've padded one bit onto the end of the path, have indicated there is a terminator bit, and that we need padding after the prefix to fit evenly into bytes.
 
   **Note that we changed the terminator from 16 to 2. This is the access the child node at index 2 of a branch node.**
-  
 
-## Benchmarks
 
-##### Radix 16: Encoding Benchmark Results:
-    BenchmarkHexToCompact-4    	    50000000	        30.0 ns/op
-    BenchmarkCompactToHex-4    	    30000000	        37.6 ns/op
-    BenchmarkKeybytesToHex-4   	    30000000	        50.4 ns/op
-    BenchmarkHexToKeybytes-4   	    50000000	        25.6 ns/op
 
-##### Radix 2: Encoding Benchmark Results:
-    BenchmarkBinToCompact-4        	50000000	        27.4 ns/op
-    BenchmarkCompactToBin-4        	20000000	        76.3 ns/op
-    BenchmarkKeybytesToBin-4       	20000000	        90.6 ns/op
-    BenchmarkBinToKeybytes-4       	50000000	        24.0 ns/op
+## Results
+##### Hex Trie: Random 500 Nodes
+    Ave Proof Nodes: 4.3
+    Ave Proof Size: 1378.8 bytes
 
-##### Radix 16: Proof Benchmark Results:
-    BenchmarkProve-4           	    2000	    801100 ns/op
-    BenchmarkVerifyProof100-4     	  200000	     10789 ns/op
-    BenchmarkVerifyProof1000-4     	  200000	     11673 ns/op
-    BenchmarkVerifyProof10000-4    	  200000	     10828 ns/op
-    BenchmarkVerifyProof100000-4   	  200000	     12626 ns/op
-    
-##### Radix 2: Proof Benchmark Results:
-    BenchmarkProve-4               	     300	     3633869 ns/op
-    BenchmarkVerifyProof100-4         100000	       10826 ns/op
-    BenchmarkVerifyProof1000-4     	  100000	       11997 ns/op
-    BenchmarkVerifyProof10000-4    	  200000	       10998 ns/op
-    BenchmarkVerifyProof100000-4   	  100000	       14474 ns/op
-    
-##### Radix 16: Trie Benchmark Results:
-    BenchmarkGet-4                 	 5000000	       247 ns/op
-    BenchmarkGetDB-4               	10000000	       168 ns/op
-    BenchmarkUpdateBE-4            	 1000000	      1863 ns/op
-    BenchmarkUpdateLE-4            	 1000000	      2413 ns/op
-    BenchmarkHash-4                	  300000	      4149 ns/op
-    
-##### Radix 2: Trie Benchmark Results:
-    BenchmarkGet-4                 	 3000000	         519 ns/op
-    BenchmarkGetDB-4               	 3000000	         406 ns/op
-    BenchmarkUpdateBE-4            	 1000000	        2029 ns/op
-    BenchmarkUpdateLE-4            	 1000000	        2707 ns/op
-    BenchmarkHash-4                	  300000	        6757 ns/op
+##### Bin Trie: Random 500 Nodes
+    Ave Proof Nodes: 11.6
+    Ave Proof Size: 768.4 bytes (44% improvement)
 
+##### Hex Trie: Random 5000 Nodes
+    Ave Proof Nodes: 5.2
+    Ave Proof Size: 1759 bytes
+
+##### Bin Trie: Random 5000 Nodes
+    Ave Proof Nodes: 15.4
+    Ave Proof Size: 1014 bytes (42% improvement)
+
+##### Hex Trie: Random 50000 Nodes
+    Ave Proof Nodes: 5.4
+    Ave Proof Size: 2182.6 bytes
+
+##### Bin Trie: Random 50000 Nodes
+    Ave Proof Nodes: 18.6
+    Ave Proof Size: 1235.4 bytes (43% improvement)
+
+##### Hex Trie: Random 500000 Nodes
+    Ave Proof Nodes: 6.2
+    Ave Proof Size: 2663 bytes
+
+##### Bin Trie: Random 500000 Nodes
+    Ave Proof Nodes: 21
+    Ave Proof Size: 1406.8 bytes (47% improvement)

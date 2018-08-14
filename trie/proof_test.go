@@ -35,7 +35,7 @@ func init() {
 }
 
 func TestProof(t *testing.T) {
-	trie, vals := randomTrie(500000)
+	trie, vals := randomTrie(500)
 	root := trie.Hash()
 	aveproofsize := 0
 	ps := 0
