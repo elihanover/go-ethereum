@@ -1,11 +1,11 @@
-# Binary Patricia State Trie
+# Go-Ethereum Binary State Trie Implementation
 ## TL;DR
 By using a binary Merkle Patricia tree and removing redundant hash nodes from Merkle proofs, we can reduce the size of proofs by over 40%.
 
 ## Context
 As mentioned [here](https://ethresear.ch/t/a-two-layer-account-trie-inside-a-single-layer-trie/210), reducing the radix of the state trie to 2 would decrease the size of the light client’s optimal merkle proof by a factor of ~3.75.
 
-3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers.  The cost of this is a trie with 87% more nodes (again, not accounting for leaf/extension nodes), an added burden for full nodes to store, construct merkle proofs, and hash from.
+3.75 = 15/4, where we have 15 times less sibling nodes per layer and 4x more layers.  The cost of this is a trie with 87% more nodes (again, not accounting for leaf/extension nodes), an added burden for full nodes to store, construct merkle proofs, and hash from.  Note that the size of branch nodes is substantially (~5x) smaller using a binary trie, so 87% may not be as dire as it appears.
 
 ## What We Did
 ### "Hashless" Merkle Proofs
@@ -38,7 +38,7 @@ A node's path can be encoded in either HP (referred to as *compact* encoding in 
     Hex: "a56cc"
     Compact: [0001 1010] [0101 0110] [1100 1100]
 
-    Hex: "43c1f"
+    Hex: "43c1T" (note that each hex character is actually a byte after decoding, so T corresponds to a terminator BYTE)
     Compact: [0010 0000] [0100 0011] [1100 0001]
 
 #### Problem:
